@@ -4,7 +4,35 @@
 
 %% Read image and convert to double, grayscale format 
 clear;
-Im = rgb2gray( im2double( imread('./Testbilder/im1s.jpg') ) );
+close all;
+Im = rgb2gray( im2double( imread('./Testbilder/im3s.jpg') ) );
+
+level = graythresh(Im); % Computes the global threshold level from the image
+BW = im2bw(Im,level);   % Convert the image to binary image with threshold: level
+
+BW2 = bwmorph(BW,'open');
+
+imshow(BW2);
+figure;
+hold on;
+imshow(BW);
+
+
+
+
+%% Find staff lines
+% Histogram plot of sum of all pixels horizontally
+% or hough transform
+
+% HISTOGRAM
+% InvBW = BW<1;
+% pSum = sum(InvBW(:,:));
+% imshow(InvBW);
+
+% HOUGH
+[H, theta, rho] = hough(BW);
+peaks = houghpeaks(H, 10);
+
 
 %% Remove staff lines 
 
