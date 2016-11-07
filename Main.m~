@@ -29,18 +29,15 @@ invBW = BW<level;
 
 %% Find best angle
 A = -1.0;
-maxValsum = 0;
-
+valsum = 0;
+rotIm;
 for angle=-1.0:0.1:1.0
-   rotIm = imrotate(invBW, angle);      % Rotate the image with angle from -1.0 - 1.0 degrees. 
-   valsum = sum( sum(rotIm(:,:)' ) );   % Calculate the integral of the histogram.
-   if(valsum > maxValsum )
-       maxValsum = valsum;
-       A = angle;
-   end
-end  
-
-invBW = imrotate(invBW, A);
+   rotIm = imrotate(invBW, angle);
+   valsum = sum( sum(invBW(:,:)' ) );
+   prinf('Angle:')
+end
+%%
+invBW = imrotate(invBW, 0.47);
 maxVals = sum( invBW(:,:)' );
 
 plot(maxVals);
