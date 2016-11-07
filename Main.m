@@ -3,18 +3,17 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %% Read image and convert to double, grayscale format 
+% PREPROCESSING
 clear;
 close all;
-Im = rgb2gray( im2double( imread('./Testbilder/im3s.jpg') ) );
+Im = imread('./Testbilder/im1s.jpg'); % Read the image
+Im = im2double( Im ); % Convert image to double
 
 level = graythresh(Im); % Computes the global threshold level from the image
 BW = im2bw(Im,level);   % Convert the image to binary image with threshold: level
 
-BW2 = bwmorph(BW,'open');
+%BW2 = bwmorph(BW,'close',2);
 
-imshow(BW2);
-figure;
-hold on;
 imshow(BW);
 
 
@@ -29,10 +28,15 @@ imshow(BW);
 % pSum = sum(InvBW(:,:));
 % imshow(InvBW);
 
-% HOUGH
-[H, theta, rho] = hough(BW);
-peaks = houghpeaks(H, 10);
 
+%% HOUGH
+ib = imrotate(Im,10,'bilinear');
+
+imshow(ib);
+%ib = BW<level;
+
+[H, T, R] = hough(ib);
+imshow(ib);
 
 %% Remove staff lines 
 
