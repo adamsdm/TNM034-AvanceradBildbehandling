@@ -23,20 +23,25 @@ imshow(BW);
 % Histogram plot of sum of all pixels horizontally
 % or hough transform
 
-% HISTOGRAM
-% InvBW = BW<1;
-% pSum = sum(InvBW(:,:));
-% imshow(InvBW);
+%% HISTOGRAM
+close all;
+invBW = BW<level;
+invBW = imrotate(invBW, 0.47);
+maxVals = sum( invBW(:,:)' );
+
+plot(maxVals);
+
+
 
 
 %% HOUGH
-ib = imrotate(Im,10,'bilinear');
-
+ib = imrotate(Im,10,'bilinear','crop');
 imshow(ib);
-%ib = BW<level;
 
+BW = im2bw(ib,level);   % Convert the image to binary image with threshold: level
+ib = BW<level;
+imshow(ib);
 [H, T, R] = hough(ib);
-imshow(ib);
 
 %% Remove staff lines 
 
