@@ -6,7 +6,7 @@
 % PREPROCESSING
 clear;
 close all;
-Im = imread('./Testbilder/im1s.jpg'); % Read the image
+Im = imread('./Testbilder/im3s.jpg'); % Read the image
 Im = im2double( Im ); % Convert image to double
 
 level = graythresh(Im); % Computes the global threshold level from the image
@@ -17,31 +17,16 @@ BW = im2bw(Im,level);   % Convert the image to binary image with threshold: leve
 imshow(BW);
 
 
-
-
 %% Find staff lines
-% Histogram plot of sum of all pixels horizontally
-% or hough transform
+% HISTOGRAM
+% Find best angle
 
-%% HISTOGRAM
 close all;
 invBW = BW<level;
 
-%% Find best angle
-A = -1.0;
-maxValsum = 0;
-
-for angle=-1.0:0.1:1.0
-   rotIm = imrotate(invBW, angle);      % Rotate the image with angle from -1.0 - 1.0 degrees. 
-   valsum = sum( sum(rotIm(:,:)' ) );   % Calculate the integral of the histogram.
-   if(valsum > maxValsum )
-       maxValsum = valsum;
-       A = angle;
-   end
-end  
-
-invBW = imrotate(invBW, A);
-maxVals = sum( invBW(:,:)' );
+A = findBestRotAngle(invBW);
+rotIm = imrotate(invBW, A);
+maxVals = sum(rotIm(:,:)');
 
 plot(maxVals);
 
