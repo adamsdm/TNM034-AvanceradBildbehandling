@@ -21,9 +21,9 @@ for angle=-1.0:0.1:1.0
        maxPeak = peak;
        A = angle;
    end
-   count = count +1;
+   %count = count +1;
 end  
-size(X)
+%size(X)
 %plot(-1.0:0.1:1.0,X); %uncomment count and X to get a plot for the peak
 %values with corresponding histogram angle.
 
