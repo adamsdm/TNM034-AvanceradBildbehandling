@@ -26,11 +26,11 @@ invBW = BW<level;   %
 
 A = findBestRotAngle(invBW);
 %% Show peaks in plot
-invBWRotated = imrotate(invBW, A);         % Rotate the image with the angle obtained
-maxVals = sum(invBWRotated(:,:)');         % calculate the histogram by summing pixels horizontally
-maxVals(maxVals < 300) = 0;         % Removes all noise below a certain threshold
+invBWRotated = imrotate(invBW, A,'bilinear');   % Rotate the image with the angle obtained
+maxVals = sum(invBWRotated(:,:)');              % calculate the histogram by summing pixels horizontally
+maxVals(maxVals < 300) = 0;                     % Removes all noise below a certain threshold
 
-[peaks, locs] = findpeaks(maxVals); % Find peak locations, stemlines y value = locs
+[peaks, locs] = findpeaks(maxVals);             % Find peak locations, stemlines y value = locs
 
 plot(maxVals); hold on;
 scatter(locs,peaks,'r');
@@ -38,7 +38,8 @@ xlabel('Staff line locations, Y-value');
 
 
 %% Show found peak locations in image;
-imshow(imrotate(Im,A)); hold on;
+imshow(imrotate(Im,A,'bilinear')); hold on;
+
 for i=1:length(locs)
     line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',2,'Color','red');
 end
