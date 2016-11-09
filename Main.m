@@ -2,11 +2,11 @@
 %%%% TNM034(Im) testing %%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Read image and convert to double, grayscale format 
+
 % PREPROCESSING
 clear;
 close all;
-Im = imread('./Testbilder/im3s.jpg'); % Read the image
+Im = imread('./Testbilder/im1s.jpg'); % Read the image
 Im = im2double( Im ); % Convert image to double
 
 level = graythresh(Im); % Computes the global threshold level from the image
@@ -22,25 +22,22 @@ imshow(BW);
 % Find best angle
 
 close all;
-invBW = BW<level;
+invBW = BW<level;   % 
 
 A = findBestRotAngle(invBW);
-rotIm = imrotate(invBW, A);
-maxVals = sum(rotIm(:,:)');
+%%
+rotIm = imrotate(invBW, A);         % Rotate the image with the angle obtained
+maxVals = sum(rotIm(:,:)');         % calculate the histogram by summing pixels horizontally
+maxVals(maxVals < 300) = 0;         % Removes all noise below a certain threshold
 
-plot(maxVals);
+[peaks, locs] = findpeaks(maxVals); % Find peak locations, stemlines y value = locs
+
+plot(maxVals); hold on;
+scatter(locs,peaks,'r');
+
+%%
 
 
-
-
-%% HOUGH
-ib = imrotate(Im,10,'bilinear','crop');
-imshow(ib);
-
-BW = im2bw(ib,level);   % Convert the image to binary image with threshold: level
-ib = BW<level;
-imshow(ib);
-[H, T, R] = hough(ib);
 
 %% Remove staff lines 
 
@@ -58,5 +55,5 @@ imshow(ib);
 
 
 %%
-imshow(Im);
+
  
