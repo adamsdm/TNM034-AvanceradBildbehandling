@@ -63,24 +63,20 @@ barWidth = mean(mean(barWidth));        % Finally, mean the values in the matrix
 BWRotated = imrotate(BW,A,'bilinear');
 
 se = zeros(3,3);
-se(:,2)=1
+se(:,2)=1;
 
 BWRotatedNoStaff = imclose(BWRotated,se);
-
 
 imshow(BWRotated);
 figure;
 imshow(BWRotatedNoStaff);
 
-%% Symbol segmentation (Optimal recognition of music symbols, 3.3)
-% "localizing and isolating the symbols in order to identify them"
+%% Corrolation and template matching
+template = imread('NoteheadTemplate.png');
+template = im2bw(template,0.9);
 
-% TODO Beam Detection
+C = normxcorr2(template, BWRotatedNoStaff);
+imshow(C);
 
-% TODO Notes, notes with flags and notes open detection
-
-
-
-%%
 
  
