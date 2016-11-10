@@ -41,7 +41,7 @@ xlabel('Staff line locations, Y-value');
 imshow(imrotate(Im,A,'bilinear')); hold on;
 
 for i=1:length(locs)
-    line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',2,'Color','red');
+    line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
 end
 
 
@@ -60,6 +60,17 @@ barWidth = mean(mean(barWidth));        % Finally, mean the values in the matrix
 % TODO (Optimal recognition of music symbols, 3.2)
 % "line track height algorithm with the stable path algorithm
 % to remove staff lines"
+BWRotated = imrotate(BW,A,'bilinear');
+
+se = zeros(3,3);
+se(:,2)=1
+
+BWRotatedNoStaff = imclose(BWRotated,se);
+
+
+imshow(BWRotated);
+figure;
+imshow(BWRotatedNoStaff);
 
 %% Symbol segmentation (Optimal recognition of music symbols, 3.3)
 % "localizing and isolating the symbols in order to identify them"
