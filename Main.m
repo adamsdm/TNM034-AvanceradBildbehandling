@@ -4,9 +4,9 @@
 
 
 % PREPROCESSING
-clear;
+clear all;
 close all;
-Im = imread('./Testbilder/im1s.jpg'); % Read the image
+Im = imread('./Testbilder/im3s.jpg'); % Read the image
 Im = im2double( Im ); % Convert image to double
 
 level = graythresh(Im); % Computes the global threshold level from the image
@@ -27,8 +27,12 @@ invBW = BW<level;   %
 A = findBestRotAngle(invBW);
 %% Show peaks in plot
 invBWRotated = imrotate(invBW, A,'bilinear');   % Rotate the image with the angle obtained
+
 maxVals = sum(invBWRotated(:,:)');              % calculate the histogram by summing pixels horizontally
-maxVals(maxVals < 300) = 0;                     % Removes all noise below a certain threshold
+[peaks, locs] = findpeaks(maxVals);             % Find peak locations, stemlines y value = locs
+
+maxValsThresh = 0.3*max(max(peaks));
+maxVals(maxVals < maxValsThresh) = 0;                     % Removes all noise below a certain threshold
 
 [peaks, locs] = findpeaks(maxVals);             % Find peak locations, stemlines y value = locs
 
@@ -75,8 +79,30 @@ imshow(BWRotatedNoStaff);
 template = imread('NoteheadTemplate.png');
 template = im2bw(template,0.9);
 
-C = normxcorr2(template, BWRotatedNoStaff);
-imshow(C);
+% resize height of image to 130% of barwidth
+tempRez = imresize(template, (1/0.72)*[barWidth NaN]);
+C = normxcorr2(tempRez, BWRotatedNoStaff);
+
+imshow(tempRez);
+%%
+% Remove border from C which normxcorr2 adds
+yoffset = (size(C,1)-size(BWRotatedNoStaff,1))
+xoffset = (size(C,2)-size(BWRotatedNoStaff,2))
+
+C = C(yoffset/2:size(C,1)-yoffset/2,:);
+
+
+%%
+%Otsu
+max(max(C)) %graythresh(C)
+
+%%
+imshow(C>0.8*max(max(C)));
+for i=1:length(locs)
+    line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
+end
+figure;
+imshow(BWRotated);
 
 
  
