@@ -40,6 +40,32 @@ plot(maxVals); hold on;
 scatter(locs,peaks,'r');
 xlabel('Staff line locations, Y-value');
 
+%% Remove trash peaks from locs and peaks
+[peaks, locs] = findpeaks(maxVals); % TEMP DELETE THIS LINE
+
+medianBarWidth = median(diff(locs)); % Find median bar width
+medianBarWidth = medianBarWidth+2; 
+
+index=1;
+while( index < length(locs-5)) 
+    % Check if 5 next elements are withing range
+    if( locs(index+1) - locs(index+0) < medianBarWidth && locs(index+2) - locs(index+1) < medianBarWidth && locs(index+3) - locs(index+2) < medianBarWidth &&  locs(index+4) - locs(index+3) < medianBarWidth ) 
+        locs(index:index+4)
+        index=index+5;    % check next 5 peaks
+    else % peak is trash peak
+        locs(index) = -1; % set peaks not accepted to negative value 
+        index=index+1; % check next peak
+    end
+end
+
+exclude = locs < 0; %Logicall array containing positions where locs is negative
+locs(exclude) = [];
+peaks(exclude) = [];
+
+stem(locs,peaks,'r');
+
+
+
 
 %% Show found peak locations in image;
 imshow(imrotate(Im,A,'bilinear')); hold on;
@@ -83,7 +109,6 @@ template = im2bw(template,0.9);
 tempRez = imresize(template, (1/0.72)*[barWidth NaN]);
 C = normxcorr2(tempRez, BWRotatedNoStaff);
 
-imshow(tempRez);
 %%
 % Remove border from C which normxcorr2 adds
 yoffset = (size(C,1)-size(BWRotatedNoStaff,1))
@@ -91,13 +116,9 @@ xoffset = (size(C,2)-size(BWRotatedNoStaff,2))
 
 C = C(yoffset/2:size(C,1)-yoffset/2,:);
 
-
 %%
-%Otsu
-max(max(C)) %graythresh(C)
-
-%%
-imshow(C>0.8*max(max(C)));
+%imshow(C>0.8*max(max(C)));
+imshow(C>0.85*max(max(C)));
 for i=1:length(locs)
     line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
 end
