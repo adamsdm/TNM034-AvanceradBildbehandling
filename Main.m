@@ -152,6 +152,12 @@ for i = 1:length(st);
     w = thisBB(3);
     h = thisBB(4);
     
+    %   (x,y)-------(x+w,y)
+    %     |            |
+    %     |            |
+    %     |            |
+    %  (x,y+h)-----(x+w,y+h)
+    
     % if bounding box in CThresh does NOT contains ones
     if( ~any(any(CThresh(y:y+h, x:x+w))))
         acceptedSt(i)=1;
@@ -162,7 +168,7 @@ end
 filteredSt(acceptedSt) = [];
     
 
-%%
+%% Plot bounding boxes in invBWRotatedNoStaff
 imshow(invBWRotatedNoStaff);
 
 for k = 1 : length(filteredSt)
@@ -170,4 +176,6 @@ for k = 1 : length(filteredSt)
   rectangle('Position', [thisBB(1),thisBB(2),thisBB(3),thisBB(4)],...
   'EdgeColor','r','LineWidth',2  )
 end
+
+
 
