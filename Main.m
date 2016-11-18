@@ -6,7 +6,7 @@
 % PREPROCESSING
 clear all;
 close all;
-Im = imread('./Testbilder/im3s.jpg'); % Read the image
+Im = imread('./Testbilder/im1s.jpg'); % Read the image
 Im = im2double( Im ); % Convert image to double
 
 level = graythresh(Im); % Computes the global threshold level from the image
@@ -14,7 +14,7 @@ BW = im2bw(Im,level);   % Convert the image to binary image with threshold: leve
 
 %BW2 = bwmorph(BW,'close',2);
 
-imshow(BW);
+imshow(Im);
 
 
 %% Find staff lines
@@ -105,6 +105,8 @@ imshow(BWRotatedNoStaff);
 template = imread('NoteheadTemplate.png');
 template = im2bw(template,0.9);
 
+imshow(template);
+
 % resize height of image to 130% of barwidth
 tempRez = imresize(template, (1/0.72)*[barWidth NaN]);
 C = normxcorr2(tempRez, BWRotatedNoStaff);
@@ -129,7 +131,8 @@ end
 figure;
 imshow(BWRotatedNoStaff);
 
-
+%%
+imshow(invBWRotatedNoStaff);
 %%
 invBWRotatedNoStaff = BWRotatedNoStaff<1;
 st = regionprops(invBWRotatedNoStaff,'BoundingBox');

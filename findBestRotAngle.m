@@ -15,6 +15,7 @@ maxPeak = 0;
 %count = 1;
 for angle=-1.0:0.1:1.0
    rotIm = imrotate(invBW, angle);      % Rotate the image with angle from -1.0 - 1.0 degrees. 
+   % Rotate Im instead and convert to invBW
    peak = max( sum(rotIm(:,:)' ) );   % Calculate the integral of the histogram.
    %X(count) = peak;
    if(peak > maxPeak)
