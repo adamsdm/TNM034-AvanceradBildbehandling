@@ -14,18 +14,11 @@ maxPeak = 0;
 
 X = zeros(1,20);
 count = 1;
-
-[r,c] = size(Im);
-Im = ones(r,c)-Im;
-T=graythresh(Im);
-
 for angle=-1.0:0.1:1.0
-   
-   rotIm = imrotate(Im, angle, 'bicubic');      % Rotate the image with angle from -1.0 - 1.0 degrees. 
+   rotIm = imrotate(Im, angle);      % Rotate the image with angle from -1.0 - 1.0 degrees. 
    % Rotate Im instead and convert to invBW
-%    invBW = im2bw(rotIm, graythresh(rotIm));
-   invBW = rotIm > T;
-   imshow(invBW);
+   invBW = im2bw(rotIm, graythresh(rotIm));
+   invBW = invBW < 1;
    peak = max( sum(invBW(:,:)' ) );   % Calculate the integral of the histogram.
    X(count) = peak;
    if(peak > maxPeak)
