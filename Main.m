@@ -116,14 +116,44 @@ xoffset = (size(C,2)-size(BWRotatedNoStaff,2))
 
 C = C(yoffset/2:size(C,1)-yoffset/2,:);
 
+imshow(C)
+for i=1:length(locs)
+    line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
+end
 %%
-%imshow(C>0.8*max(max(C)));
+close all;
 imshow(C>0.85*max(max(C)));
 for i=1:length(locs)
     line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
 end
 figure;
-imshow(BWRotated);
+imshow(BWRotatedNoStaff);
 
 
- 
+%%
+invBWRotatedNoStaff = BWRotatedNoStaff<1;
+st = regionprops(invBWRotatedNoStaff,'BoundingBox');
+filteredSt = st;
+acceptedSt = logical(zeros(1,length(st)));
+
+for i = 1:length(st);
+    width = st(i).BoundingBox(3);
+    height = st(i).BoundingBox(4);
+       
+    
+end
+
+% Removes elements where acceptedSt = 1
+filteredSt(acceptedSt) = [];
+    
+
+
+%%
+imshow(invBWRotatedNoStaff);
+
+for k = 1 : length(filteredSt)
+  thisBB = filteredSt(k).BoundingBox;
+  rectangle('Position', [thisBB(1),thisBB(2),thisBB(3),thisBB(4)],...
+  'EdgeColor','r','LineWidth',2  )
+end
+
