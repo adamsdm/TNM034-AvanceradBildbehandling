@@ -177,8 +177,6 @@ for k = 1 : length(filteredSt)
     thisBB = filteredSt(k).BoundingBox;
     rectangle('Position', [thisBB(1),thisBB(2),thisBB(3),thisBB(4)],...
         'EdgeColor','r','LineWidth',2  )
-    
-    text(thisBB(1),thisBB(2),'1','g');
 
 end
 
