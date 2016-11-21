@@ -15,6 +15,8 @@ maxPeak = 0;
 X = zeros(1,20);
 count = 1;
 
+Im = rgb2gray(Im);
+
 [r,c] = size(Im);
 Im = ones(r,c)-Im;
 T=graythresh(Im);

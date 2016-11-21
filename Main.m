@@ -24,7 +24,7 @@ imshow(Im);
 close all;
 invBW = BW<level;   % 
 
-A = findBestRotAngle(invBW);
+A = findBestRotAngle(Im);
 %% Show peaks in plot
 invBWRotated = imrotate(invBW, A,'bilinear');   % Rotate the image with the angle obtained
 
