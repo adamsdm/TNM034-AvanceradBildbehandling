@@ -29,6 +29,8 @@ A = findBestRotAngle(invBW);
 invBWRotated = imrotate(invBW, A,'bilinear');   % Rotate the image with the angle obtained
 
 maxVals = sum(invBWRotated(:,:)');              % calculate the histogram by summing pixels horizontally
+plot(maxVals);
+%%
 [peaks, locs] = findpeaks(maxVals);             % Find peak locations, stemlines y value = locs
 
 maxValsThresh = 0.3*max(max(peaks));
@@ -147,8 +149,8 @@ acceptedSt = logical(zeros(1,length(st)))';
 for i = 1:length(st);
     thisBB = filteredSt(i).BoundingBox;
     
-    x = thisBB(1);
-    y = thisBB(2);
+    x = round(thisBB(1));
+    y = round(thisBB(2));
     w = thisBB(3);
     h = thisBB(4);
     
@@ -172,10 +174,14 @@ filteredSt(acceptedSt) = [];
 imshow(invBWRotatedNoStaff);
 
 for k = 1 : length(filteredSt)
-  thisBB = filteredSt(k).BoundingBox;
-  rectangle('Position', [thisBB(1),thisBB(2),thisBB(3),thisBB(4)],...
-  'EdgeColor','r','LineWidth',2  )
+    thisBB = filteredSt(k).BoundingBox;
+    rectangle('Position', [thisBB(1),thisBB(2),thisBB(3),thisBB(4)],...
+        'EdgeColor','r','LineWidth',2  )
+    
+    text(thisBB(1),thisBB(2),'1','g');
+
 end
+
 
 
 
