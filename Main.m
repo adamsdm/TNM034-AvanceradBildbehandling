@@ -180,6 +180,33 @@ for k = 1 : length(filteredSt)
 
 end
 
+%%
+s= regionprops(CThresh, 'centroid');
+
+centroids = [s.Centroid];
+x = centroids(1:2:end-1);
+y = centroids(2:2:end);
 
 
+%%
 
+
+top = stafflineMatrix(1,1)-4*barWidth;
+bot = stafflineMatrix(1,5)+4*barWidth;
+
+subIm = CThresh(top:bot, :);
+
+s= regionprops(subIm, 'centroid');
+
+centroids = [s.Centroid];
+x = centroids(1:2:end-1);
+y = centroids(2:2:end);
+
+temp = zeros(length(x), 2); 
+temp(:,1) = x;
+temp(:,2) = y;
+
+sortedCentroids = sortrows(temp, 1);
+imshow(subIm);
+hold on;
+plot(x,y,'*');
