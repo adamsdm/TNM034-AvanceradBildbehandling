@@ -29,6 +29,8 @@ A = findBestRotAngle(invBW);
 invBWRotated = imrotate(invBW, A,'bilinear');   % Rotate the image with the angle obtained
 
 maxVals = sum(invBWRotated(:,:)');              % calculate the histogram by summing pixels horizontally
+plot(maxVals);
+%%
 [peaks, locs] = findpeaks(maxVals);             % Find peak locations, stemlines y value = locs
 
 maxValsThresh = 0.3*max(max(peaks));
@@ -117,6 +119,9 @@ yoffset = (size(C,1)-size(BWRotatedNoStaff,1))
 xoffset = (size(C,2)-size(BWRotatedNoStaff,2))
 
 C = C(yoffset/2:size(C,1)-yoffset/2,:);
+C = C(:, xoffset/2:size(C,2)-xoffset/2);
+
+
 
 imshow(C)
 for i=1:length(locs)
@@ -124,39 +129,57 @@ for i=1:length(locs)
 end
 %%
 close all;
-imshow(C>0.85*max(max(C)));
+CThresh = (C>0.85*max(max(C)));
+imshow(CThresh);
 for i=1:length(locs)
     line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
 end
 figure;
 imshow(BWRotatedNoStaff);
 
-%%
-imshow(invBWRotatedNoStaff);
-%%
+%% Remove trash bounding boxes
+% Remove by checking if there is a notehead inside the bounding box
 invBWRotatedNoStaff = BWRotatedNoStaff<1;
 st = regionprops(invBWRotatedNoStaff,'BoundingBox');
 filteredSt = st;
-acceptedSt = logical(zeros(1,length(st)));
+acceptedSt = logical(zeros(1,length(st)))';
 
+% For each bounding box
+%for i = 1:length(st);
 for i = 1:length(st);
-    width = st(i).BoundingBox(3);
-    height = st(i).BoundingBox(4);
-       
+    thisBB = filteredSt(i).BoundingBox;
     
+    x = round(thisBB(1));
+    y = round(thisBB(2));
+    w = thisBB(3);
+    h = thisBB(4);
+    
+    %   (x,y)-------(x+w,y)
+    %     |            |
+    %     |            |
+    %     |            |
+    %  (x,y+h)-----(x+w,y+h)
+    
+    % if bounding box in CThresh does NOT contains ones
+    if( ~any(any(CThresh(y:y+h, x:x+w))))
+        acceptedSt(i)=1;
+    end
 end
 
 % Removes elements where acceptedSt = 1
 filteredSt(acceptedSt) = [];
     
 
-
-%%
+%% Plot bounding boxes in invBWRotatedNoStaff
 imshow(invBWRotatedNoStaff);
 
 for k = 1 : length(filteredSt)
-  thisBB = filteredSt(k).BoundingBox;
-  rectangle('Position', [thisBB(1),thisBB(2),thisBB(3),thisBB(4)],...
-  'EdgeColor','r','LineWidth',2  )
+    thisBB = filteredSt(k).BoundingBox;
+    rectangle('Position', [thisBB(1),thisBB(2),thisBB(3),thisBB(4)],...
+        'EdgeColor','r','LineWidth',2  )
+
 end
+
+
+
 
