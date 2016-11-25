@@ -188,25 +188,32 @@ x = centroids(1:2:end-1);
 y = centroids(2:2:end);
 
 
-%%
+%% Plot centroids 
 
+% for each system
+% for n=1:size(stafflineMatrix,1)
 
-top = stafflineMatrix(1,1)-4*barWidth;
-bot = stafflineMatrix(1,5)+4*barWidth;
+top = stafflineMatrix(2,1)-4*barWidth;      % Get top y-value of system
+bot = stafflineMatrix(2,5)+4*barWidth;      % Get top y-value of system
 
-subIm = CThresh(top:bot, :);
+subIm = CThresh(top:bot, :);                % Select the subimage from 
 
-s= regionprops(subIm, 'centroid');
+s = regionprops(subIm, 'centroid');         % Find the centroids in the subimage
 
-centroids = [s.Centroid];
+centroids = [s.Centroid];                   % Convert the centroids struct to 2 vectors
 x = centroids(1:2:end-1);
 y = centroids(2:2:end);
 
-temp = zeros(length(x), 2); 
-temp(:,1) = x;
-temp(:,2) = y;
+centroids2 = zeros(length(x), 2);           % Merge the x,y vector into a single vector of pairs
+centroids2(:,1) = x;
+centroids2(:,2) = y;
 
-sortedCentroids = sortrows(temp, 1);
-imshow(subIm);
-hold on;
-plot(x,y,'*');
+sortedCentroids = sortrows(centroids2, 1);  % Sort centroids by x
+
+%For each centroid
+for i=1:length(centroids2)
+    imshow(subIm);
+    hold on;
+    plot(centroids2(i,1),centroids2(i,2),'*');
+    pause(0.2);
+end
