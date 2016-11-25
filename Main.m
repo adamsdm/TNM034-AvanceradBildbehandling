@@ -194,11 +194,67 @@ notes = ['F4', 'E4', 'D4', 'C4', 'B4', 'A4' , 'G3', 'F3', 'E3', 'D3', 'C3', 'B3'
 % for each system
 % for n=1:size(stafflineMatrix,1)
 
+
+
 top = stafflineMatrix(2,1)-4*barWidth;      % Get top y-value of system
 bot = stafflineMatrix(2,5)+4*barWidth;      % Get top y-value of system
 
+subImNoTransform = BWRotatedNoStaff(top:bot, :);
+
 subIm = CThresh(top:bot, :);                % Select the subimage from 
 
+%% create bounding boxes  %%WAKAKAKAKAKAKAKAKAKAKA%%%%%%%%%%%
+C = normxcorr2(tempRez, subImNoTransform);
+
+yoffset = (size(C,1)-size(subImNoTransform,1))
+xoffset = (size(C,2)-size(subImNoTransform,2))
+
+C = C(yoffset/2:size(C,1)-yoffset/2,:);
+C = C(:, xoffset/2:size(C,2)-xoffset/2);
+
+CThresh = (C>0.85*max(max(C)));
+%%
+invsubImNoTransform = subImNoTransform < 1;
+st = regionprops(invsubImNoTransform,'BoundingBox');
+filteredSt = st;
+acceptedSt = false(1,length(st))';
+
+%%
+% For each bounding box
+%for i = 1:length(st);
+for i = 1:length(st)
+    thisBB = filteredSt(i).BoundingBox;
+    
+    x = round(thisBB(1));
+    y = round(thisBB(2));
+    w = thisBB(3);
+    h = thisBB(4);
+    
+    %   (x,y)-------(x+w,y)
+    %     |            |
+    %     |            |
+    %     |            |
+    %  (x,y+h)-----(x+w,y+h)
+    
+    % if bounding box in CThresh does NOT contain ones
+    if( ~any(any(CThresh(y:y+h, x:x+w))))
+        acceptedSt(i)=1;
+    end
+end
+
+% Removes elements where acceptedSt = 1
+filteredSt(acceptedSt) = [];
+
+imshow(invsubImNoTransform);
+
+for k = 1 : length(filteredSt)
+    thisBB = filteredSt(k).BoundingBox;
+    rectangle('Position', [thisBB(1),thisBB(2),thisBB(3),thisBB(4)],...
+        'EdgeColor','r','LineWidth',2  )
+
+end
+%%%%%%%%%%%%%%%%%%%%THIS IS THE END%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%
 s = regionprops(subIm, 'centroid');         % Find the centroids in the subimage
 
 centroids = [s.Centroid];                   % Convert the centroids struct to 2 vectors
@@ -213,15 +269,31 @@ sortedCentroids = sortrows(centroids2, 1);  % Sort centroids by x
 
 halfBWidth = barWidth/2;
 
-
+%%
 %For each centroid
+%, y, w, h
+
 for i=1:length(centroids2)
     thisX = centroids2(i,1);
     thisY = centroids2(i,2);
-    imshow(subIm);
-    hold on;
-    plot(thisX,thisY,'*');
+    BB = [];
+    for j=1:length(filteredSt)
+        BB = filteredSt(i).BoundingBox; %extract the boundingbox from the struct containg the bounding boxes
+        % top.x <= X <= top.x + w && top.y <= y <= top.y + h
+        if ((BB(1) <= thisX <= BB(1)+BB(3)) && (BB(2) <= thisY <= BB(2)+BB(4)))
+            break;
+        end
+        
+    end
     
+    imshow(subImNoTransform);
+    rectangle('Position', [BB(1),BB(2),BB(3),BB(4)],...
+       'EdgeColor','r','LineWidth',2  );
+    
+    imshow(subImNoTransform);
+    hold on;
+   % plot(thisX,thisY,'*');
+  %  pause(1);
     noBars = round(thisY/halfBWidth);
     pause(0.1);
 end
