@@ -70,7 +70,8 @@ stem(locs,peaks,'r');
 
 
 %% Show found peak locations in image;
-imshow(imrotate(Im,A,'bilinear')); hold on;
+rotIm = imrotate(Im,A,'bilinear');
+imshow(rotIm); hold on;
 
 for i=1:length(locs)
     line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
@@ -190,14 +191,20 @@ y = centroids(2:2:end);
 
 %% Plot centroids 
 
-notes = ['F4', 'E4', 'D4', 'C4', 'B4', 'A4' , 'G3', 'F3', 'E3', 'D3', 'C3', 'B3', 'A3' , 'G2', 'F2', 'E2', 'D2', 'C2', 'B2', 'A2' , 'G1' ];
+notes = ['F4'; 'E4'; 'D4'; 'C4'; 'B3'; 'A3'; 'G3'; 'F3'; 'E3'; 'D3'; 'C3'; 'B2'; 'A2'; 'G2'; 'F2'; 'E2'; 'D2'; 'C2'; 'B2'; 'A2'; 'G1' ];
+notes = cellstr(notes);
+
 % for each system
 % for n=1:size(stafflineMatrix,1)
+barWidth = diff(stafflineMatrix(2,:),1,2);   % calculate difference in rows
+barWidth = mean(mean(barWidth));
+top = stafflineMatrix(2,1)-4*barWidth+1;      % Get top y-value of system
+bot = stafflineMatrix(2,5)+4*barWidth+1;      % Get top y-value of system
+ 
 
-top = stafflineMatrix(2,1)-4*barWidth;      % Get top y-value of system
-bot = stafflineMatrix(2,5)+4*barWidth;      % Get top y-value of system
+subIm = CThresh(top:bot, :);                % Select the subimage from
+subIm2 = invBWRotated(top:bot, :);                % Select the subimage from
 
-subIm = CThresh(top:bot, :);                % Select the subimage from 
 
 s = regionprops(subIm, 'centroid');         % Find the centroids in the subimage
 
@@ -209,19 +216,42 @@ centroids2 = zeros(length(x), 2);           % Merge the x,y vector into a single
 centroids2(:,1) = x;
 centroids2(:,2) = y;
 
+noteSheet='';
+
+
 sortedCentroids = sortrows(centroids2, 1);  % Sort centroids by x
+
 
 halfBWidth = barWidth/2;
 
+%%
+imshow(subIm2);
+
+for i=1:20
+    line([0,size(subIm2,2)],[barWidth*i, barWidth*i],'LineWidth',1,'Color','red');
+end
+
+
+%%
+figure;
 
 %For each centroid
-for i=1:length(centroids2)
+for i=1:length(centroids)
     thisX = centroids2(i,1);
     thisY = centroids2(i,2);
     imshow(subIm);
     hold on;
-    plot(thisX,thisY,'*');
+    plot(x,y,'*');
     
-    noBars = round(thisY/halfBWidth);
-    pause(0.1);
+    noBars = thisY/halfBWidth;
+    noteSheet=[noteSheet, notes(round(noBars))];
+    %pause(0.1);
 end
+for i=1:20
+    line([0,size(subIm2,2)],[halfBWidth*i, halfBWidth*i],'LineWidth',1,'Color','red');
+end
+
+imshow(subIm2);
+noteSheet
+
+
