@@ -190,6 +190,7 @@ y = centroids(2:2:end);
 
 %% Plot centroids 
 
+notes = ['F4', 'E4', 'D4', 'C4', 'B4', 'A4' , 'G3', 'F3', 'E3', 'D3', 'C3', 'B3', 'A3' , 'G2', 'F2', 'E2', 'D2', 'C2', 'B2', 'A2' , 'G1' ];
 % for each system
 % for n=1:size(stafflineMatrix,1)
 
@@ -210,10 +211,17 @@ centroids2(:,2) = y;
 
 sortedCentroids = sortrows(centroids2, 1);  % Sort centroids by x
 
+halfBWidth = barWidth/2;
+
+
 %For each centroid
 for i=1:length(centroids2)
+    thisX = centroids2(i,1);
+    thisY = centroids2(i,2);
     imshow(subIm);
     hold on;
-    plot(centroids2(i,1),centroids2(i,2),'*');
-    pause(0.2);
+    plot(thisX,thisY,'*');
+    
+    noBars = round(thisY/halfBWidth);
+    pause(0.1);
 end
