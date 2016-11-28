@@ -145,7 +145,6 @@ filteredSt = st;
 acceptedSt = logical(zeros(1,length(st)))';
 
 % For each bounding box
-%for i = 1:length(st);
 for i = 1:length(st);
     thisBB = filteredSt(i).BoundingBox;
     
@@ -192,66 +191,44 @@ y = centroids(2:2:end);
 
 notes = ['F4'; 'E4'; 'D4'; 'C4'; 'B3'; 'A3'; 'G3'; 'F3'; 'E3'; 'D3'; 'C3'; 'B2'; 'A2'; 'G2'; 'F2'; 'E2'; 'D2'; 'C2'; 'B2'; 'A2'; 'G1' ];
 notes = cellstr(notes);
-
-% for each system
-% for n=1:size(stafflineMatrix,1)
-barWidth = diff(stafflineMatrix(2,:),1,2);   % calculate difference in rows
-barWidth = mean(mean(barWidth));
-top = stafflineMatrix(2,1)-4*barWidth+1;      % Get top y-value of system
-bot = stafflineMatrix(2,5)+4*barWidth+1;      % Get top y-value of system
- 
-
-subIm = CThresh(top:bot, :);                % Select the subimage from
-subIm2 = invBWRotated(top:bot, :);                % Select the subimage from
-
-
-s = regionprops(subIm, 'centroid');         % Find the centroids in the subimage
-
-centroids = [s.Centroid];                   % Convert the centroids struct to 2 vectors
-x = centroids(1:2:end-1);
-y = centroids(2:2:end);
-
-centroids2 = zeros(length(x), 2);           % Merge the x,y vector into a single vector of pairs
-centroids2(:,1) = x;
-centroids2(:,2) = y;
-
 noteSheet='';
 
+% for each system
+for n=1:size(stafflineMatrix,1)
+    barWidth = diff(stafflineMatrix(2,:),1,2);   % calculate difference in rows
+    barWidth = mean(mean(barWidth));
+    top = stafflineMatrix(2,1)-4*barWidth+1;      % Get top y-value of system
+    bot = stafflineMatrix(2,5)+4*barWidth+1;      % Get top y-value of system
 
-sortedCentroids = sortrows(centroids2, 1);  % Sort centroids by x
+
+    subIm = CThresh(top:bot, :);                % Select the subimage from
+    subIm2 = invBWRotatedNoStaff(top:bot, :);          % Select the subimage from
 
 
-halfBWidth = barWidth/2;
+    s = regionprops(subIm, 'centroid');         % Find the centroids in the subimage
 
-%%
-% Show the subimage along with stafflines
-imshow(subIm2);
+    centroids = [s.Centroid];                      % Convert the centroids struct to 2 vectors
+    x = centroids(1:2:end-1);
+    y = centroids(2:2:end);
 
-for i=1:20
-    line([0,size(subIm2,2)],[barWidth*i, barWidth*i],'LineWidth',1,'Color','red');
+    centroids2 = zeros(length(x), 2);           % Merge the x,y vector into a single vector of pairs
+    centroids2(:,1) = x;
+    centroids2(:,2) = y;
+
+    sortedCentroids = sortrows(centroids2, 1);  % Sort centroids by x
+
+
+    halfBWidth = barWidth/2;
+
+    %For each centroid
+    for i=1:length(centroids2)
+        thisX = centroids2(i,1);        % get X-coord
+        thisY = centroids2(i,2);        % get Y-coord
+        noBars = thisY/halfBWidth;                         % Get number of half-bars from top
+        noteSheet=[noteSheet, notes(round(noBars))];       % Push the note into noteSheet
+        %pause(0.1);
+    end
+
+    noteSheet
 end
-
-
-%%
-figure;
-
-imshow(subIm);                  
-hold on;
-
-%For each centroid
-for i=1:length(centroids2)
-    thisX = centroids2(i,1);        % get X-coord
-    thisY = centroids2(i,2);        % get Y-coord
-    plot(x,y,'*');                  % Plot centroid in image
-    noBars = thisY/halfBWidth;                         % Get number of half-bars from top
-    noteSheet=[noteSheet, notes(round(noBars))];       % Push the note into noteSheet
-    %pause(0.1);
-end
-for i=1:20
-    line([0,size(subIm2,2)],[halfBWidth*i, halfBWidth*i],'LineWidth',1,'Color','red');
-end
-
-imshow(subIm2);
-noteSheet
-
 
