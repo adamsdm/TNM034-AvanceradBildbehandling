@@ -1,0 +1,5 @@
+function [ outIm ] = maxOf( inIm )
+    outIm = inIm;
+    outIm(:,:) = max(max(inIm));
+end
+

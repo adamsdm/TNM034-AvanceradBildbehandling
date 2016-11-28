@@ -15,13 +15,9 @@ Im = im2double( Im ); % Convert image to double
 % Noise removal
 % De-blurring
 
-%% Sliding maximum
-ImGray = rgb2gray(Im);
-fun = @(block_struct) max(max(block_struct.data) );
-B = blockproc(ImGray, [5 5],	fun);    %apply fun to each m-by-n sliding block	of the grayscale image A.			
+Im = rgb2gray(Im);
 
-imshow(B);
-%%
+B	=	nl1ilter(A,	[m	n],	fun)	
 
 level = graythresh(Im); % Computes the global threshold level from the image
 BW = im2bw(Im,level);   % Convert the image to binary image with threshold: level
