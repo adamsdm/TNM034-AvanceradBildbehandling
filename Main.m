@@ -70,7 +70,8 @@ stem(locs,peaks,'r');
 
 
 %% Show found peak locations in image;
-imshow(imrotate(Im,A,'bilinear')); hold on;
+rotIm = imrotate(Im,A,'bilinear');
+imshow(rotIm); hold on;
 
 for i=1:length(locs)
     line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
@@ -107,7 +108,6 @@ imshow(BWRotatedNoStaff);
 template = imread('NoteheadTemplate.png');
 template = im2bw(template,0.9);
 
-imshow(template);
 
 % resize height of image to 130% of barwidth
 tempRez = imresize(template, (1/0.72)*[barWidth NaN]);
@@ -170,7 +170,7 @@ end
 filteredSt(acceptedSt) = [];
     
 
-%% Plot bounding boxes in invBWRotatedNoStaff
+% Plot bounding boxes in invBWRotatedNoStaff
 imshow(invBWRotatedNoStaff);
 
 for k = 1 : length(filteredSt)
@@ -190,9 +190,13 @@ y = centroids(2:2:end);
 
 %% Plot centroids 
 
-notes = ['F4', 'E4', 'D4', 'C4', 'B4', 'A4' , 'G3', 'F3', 'E3', 'D3', 'C3', 'B3', 'A3' , 'G2', 'F2', 'E2', 'D2', 'C2', 'B2', 'A2' , 'G1' ];
+notes = ['F4'; 'E4'; 'D4'; 'C4'; 'B3'; 'A3'; 'G3'; 'F3'; 'E3'; 'D3'; 'C3'; 'B2'; 'A2'; 'G2'; 'F2'; 'E2'; 'D2'; 'C2'; 'B2'; 'A2'; 'G1' ];
+notes = cellstr(notes);
+
 % for each system
 % for n=1:size(stafflineMatrix,1)
+barWidth = diff(stafflineMatrix(2,:),1,2);   % calculate difference in rows
+barWidth = mean(mean(barWidth));
 
 
 
@@ -202,17 +206,19 @@ bot = stafflineMatrix(2,5)+4*barWidth;      % Get top y-value of system
 subImNoTransform = BWRotatedNoStaff(top:bot, :);
 
 subIm = CThresh(top:bot, :);                % Select the subimage from 
+subIm2 = invBWRotatedNoStaff(top:bot, :);                % Select the subimage from
 
-%% create bounding boxes  %%WAKAKAKAKAKAKAKAKAKAKA%%%%%%%%%%%
-C = normxcorr2(tempRez, subImNoTransform);
 
-yoffset = (size(C,1)-size(subImNoTransform,1))
-xoffset = (size(C,2)-size(subImNoTransform,2))
+%% create bounding boxes 
+C2 = normxcorr2(tempRez, subImNoTransform);
 
-C = C(yoffset/2:size(C,1)-yoffset/2,:);
-C = C(:, xoffset/2:size(C,2)-xoffset/2);
+yoffset = (size(C2,1)-size(subImNoTransform,1))
+xoffset = (size(C2,2)-size(subImNoTransform,2))
 
-CThresh = (C>0.85*max(max(C)));
+C2 = C2(yoffset/2:size(C2,1)-yoffset/2,:);
+C2 = C2(:, xoffset/2:size(C2,2)-xoffset/2);
+
+C2Thresh = (C2>0.85*max(max(C2)));
 %%
 invsubImNoTransform = subImNoTransform < 1;
 st = regionprops(invsubImNoTransform,'BoundingBox');
@@ -237,7 +243,7 @@ for i = 1:length(st)
     %  (x,y+h)-----(x+w,y+h)
     
     % if bounding box in CThresh does NOT contain ones
-    if( ~any(any(CThresh(y:y+h, x:x+w))))
+    if( ~any(any(C2Thresh(y:y+h, x:x+w))))
         acceptedSt(i)=1;
     end
 end
@@ -253,7 +259,6 @@ for k = 1 : length(filteredSt)
         'EdgeColor','r','LineWidth',2  )
 
 end
-%%%%%%%%%%%%%%%%%%%%THIS IS THE END%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%
 s = regionprops(subIm, 'centroid');         % Find the centroids in the subimage
 
@@ -265,14 +270,59 @@ centroids2 = zeros(length(x), 2);           % Merge the x,y vector into a single
 centroids2(:,1) = x;
 centroids2(:,2) = y;
 
+noteSheet='';
+
+
 sortedCentroids = sortrows(centroids2, 1);  % Sort centroids by x
 
+
 halfBWidth = barWidth/2;
+
+% Show the subimage along with stafflines
+imshow(subIm2);
+
+for i=1:20
+    line([0,size(subIm2,2)],[barWidth*i, barWidth*i],'LineWidth',1,'Color','red');
+end
+
+
 
 %%
 %For each centroid
 %, y, w, h
 
+for i=1:length(centroids2)
+%<<<<<<< HEAD
+    thisX = centroids2(i,1);
+    thisY = centroids2(i,2);
+    BB = [];
+
+    
+ 
+ %   hold on;
+   % plot(thisX,thisY,'*'); 
+
+
+   %  pause(1);
+    noBars = round(thisY/halfBWidth);
+    pause(0.1);
+
+
+    thisX = centroids2(i,1);        % get X-coord
+    thisY = centroids2(i,2);        % get Y-coord
+    plot(x,y,'*');                  % Plot centroid in image
+    noBars = thisY/halfBWidth;                         % Get number of half-bars from top
+    noteSheet=[noteSheet, notes(round(noBars))];       % Push the note into noteSheet
+    %pause(0.1);
+end
+for i=1:20
+    line([0,size(subIm2,2)],[halfBWidth*i, halfBWidth*i],'LineWidth',1,'Color','red');
+end
+
+imshow(subIm2);
+noteSheet
+
+%% loop over entroids and see what boundingbox it is in
 for i=1:length(centroids2)
     thisX = centroids2(i,1);
     thisY = centroids2(i,2);
@@ -285,15 +335,4 @@ for i=1:length(centroids2)
         end
         
     end
-    
-    imshow(subImNoTransform);
-    rectangle('Position', [BB(1),BB(2),BB(3),BB(4)],...
-       'EdgeColor','r','LineWidth',2  );
-    
-    imshow(subImNoTransform);
-    hold on;
-   % plot(thisX,thisY,'*');
-  %  pause(1);
-    noBars = round(thisY/halfBWidth);
-    pause(0.1);
 end
