@@ -108,7 +108,6 @@ imshow(BWRotatedNoStaff);
 template = imread('NoteheadTemplate.png');
 template = im2bw(template,0.9);
 
-imshow(template);
 
 % resize height of image to 130% of barwidth
 tempRez = imresize(template, (1/0.72)*[barWidth NaN]);
@@ -225,6 +224,7 @@ sortedCentroids = sortrows(centroids2, 1);  % Sort centroids by x
 halfBWidth = barWidth/2;
 
 %%
+% Show the subimage along with stafflines
 imshow(subIm2);
 
 for i=1:20
@@ -235,16 +235,16 @@ end
 %%
 figure;
 
+imshow(subIm);                  
+hold on;
+
 %For each centroid
-for i=1:length(centroids)
-    thisX = centroids2(i,1);
-    thisY = centroids2(i,2);
-    imshow(subIm);
-    hold on;
-    plot(x,y,'*');
-    
-    noBars = thisY/halfBWidth;
-    noteSheet=[noteSheet, notes(round(noBars))];
+for i=1:length(centroids2)
+    thisX = centroids2(i,1);        % get X-coord
+    thisY = centroids2(i,2);        % get Y-coord
+    plot(x,y,'*');                  % Plot centroid in image
+    noBars = thisY/halfBWidth;                         % Get number of half-bars from top
+    noteSheet=[noteSheet, notes(round(noBars))];       % Push the note into noteSheet
     %pause(0.1);
 end
 for i=1:20
