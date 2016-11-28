@@ -129,7 +129,7 @@ for i=1:length(locs)
 end
 %%
 close all;
-CThresh = (C>0.85*max(max(C)));
+CThresh = (C>0.78*max(max(C)));
 imshow(CThresh);
 for i=1:length(locs)
     line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
@@ -137,48 +137,8 @@ end
 figure;
 imshow(BWRotatedNoStaff);
 
-%% Remove trash bounding boxes
-% Remove by checking if there is a notehead inside the bounding box
+
 invBWRotatedNoStaff = BWRotatedNoStaff<1;
-st = regionprops(invBWRotatedNoStaff,'BoundingBox');
-filteredSt = st;
-acceptedSt = logical(zeros(1,length(st)))';
-
-% For each bounding box
-%for i = 1:length(st);
-for i = 1:length(st);
-    thisBB = filteredSt(i).BoundingBox;
-    
-    x = round(thisBB(1));
-    y = round(thisBB(2));
-    w = thisBB(3);
-    h = thisBB(4);
-    
-    %   (x,y)-------(x+w,y)
-    %     |            |
-    %     |            |
-    %     |            |
-    %  (x,y+h)-----(x+w,y+h)
-    
-    % if bounding box in CThresh does NOT contains ones
-    if( ~any(any(CThresh(y:y+h, x:x+w))))
-        acceptedSt(i)=1;
-    end
-end
-
-% Removes elements where acceptedSt = 1
-filteredSt(acceptedSt) = [];
-    
-
-% Plot bounding boxes in invBWRotatedNoStaff
-imshow(invBWRotatedNoStaff);
-
-for k = 1 : length(filteredSt)
-    thisBB = filteredSt(k).BoundingBox;
-    rectangle('Position', [thisBB(1),thisBB(2),thisBB(3),thisBB(4)],...
-        'EdgeColor','r','LineWidth',2  )
-
-end
 
 %%
 s= regionprops(CThresh, 'centroid');
@@ -188,151 +148,109 @@ x = centroids(1:2:end-1);
 y = centroids(2:2:end);
 
 
-%% Plot centroids 
+%% 
 
 notes = ['F4'; 'E4'; 'D4'; 'C4'; 'B3'; 'A3'; 'G3'; 'F3'; 'E3'; 'D3'; 'C3'; 'B2'; 'A2'; 'G2'; 'F2'; 'E2'; 'D2'; 'C2'; 'B2'; 'A2'; 'G1' ];
 notes = cellstr(notes);
+noteSheet = '';
 
 % for each system
-% for n=1:size(stafflineMatrix,1)
-barWidth = diff(stafflineMatrix(2,:),1,2);   % calculate difference in rows
-barWidth = mean(mean(barWidth));
-
-
-
-top = stafflineMatrix(2,1)-4*barWidth;      % Get top y-value of system
-bot = stafflineMatrix(2,5)+4*barWidth;      % Get top y-value of system
-
-subImNoTransform = BWRotatedNoStaff(top:bot, :);
-
-subIm = CThresh(top:bot, :);                % Select the subimage from 
-subIm2 = invBWRotatedNoStaff(top:bot, :);                % Select the subimage from
-
-
-%% create bounding boxes 
-C2 = normxcorr2(tempRez, subImNoTransform);
-
-yoffset = (size(C2,1)-size(subImNoTransform,1))
-xoffset = (size(C2,2)-size(subImNoTransform,2))
-
-C2 = C2(yoffset/2:size(C2,1)-yoffset/2,:);
-C2 = C2(:, xoffset/2:size(C2,2)-xoffset/2);
-
-C2Thresh = (C2>0.85*max(max(C2)));
-%%
-invsubImNoTransform = subImNoTransform < 1;
-st = regionprops(invsubImNoTransform,'BoundingBox');
-filteredSt = st;
-acceptedSt = false(1,length(st))';
-
-%%
-% For each bounding box
-%for i = 1:length(st);
-for i = 1:length(st)
-    thisBB = filteredSt(i).BoundingBox;
+for n=1:size(stafflineMatrix,1)
     
-    x = round(thisBB(1));
-    y = round(thisBB(2));
-    w = thisBB(3);
-    h = thisBB(4);
-    
-    %   (x,y)-------(x+w,y)
-    %     |            |
-    %     |            |
-    %     |            |
-    %  (x,y+h)-----(x+w,y+h)
-    
-    % if bounding box in CThresh does NOT contain ones
-    if( ~any(any(C2Thresh(y:y+h, x:x+w))))
-        acceptedSt(i)=1;
-    end
-end
+    barWidth = diff(stafflineMatrix(n,:),1,2);   % calculate difference in rows
+    barWidth = mean(mean(barWidth));
 
-% Removes elements where acceptedSt = 1
-filteredSt(acceptedSt) = [];
+    top = stafflineMatrix(n,1)-4*barWidth;      % Get top y-value of system
+    bot = stafflineMatrix(n,5)+4*barWidth;      % Get top y-value of system
 
-imshow(invsubImNoTransform);
+    subImNoTransform = BWRotatedNoStaff(top:bot, :);
 
-for k = 1 : length(filteredSt)
-    thisBB = filteredSt(k).BoundingBox;
-    rectangle('Position', [thisBB(1),thisBB(2),thisBB(3),thisBB(4)],...
-        'EdgeColor','r','LineWidth',2  )
-
-end
-%%
-s = regionprops(subIm, 'centroid');         % Find the centroids in the subimage
-
-centroids = [s.Centroid];                   % Convert the centroids struct to 2 vectors
-x = centroids(1:2:end-1);
-y = centroids(2:2:end);
-
-centroids2 = zeros(length(x), 2);           % Merge the x,y vector into a single vector of pairs
-centroids2(:,1) = x;
-centroids2(:,2) = y;
-
-noteSheet='';
+    subIm = CThresh(top:bot, :);                % Select the subimage from 
+    subIm2 = invBWRotatedNoStaff(top:bot, :);                % Select the subimage from
 
 
-sortedCentroids = sortrows(centroids2, 1);  % Sort centroids by x
+    %% Find boundingboxes in subIm2
+    st = regionprops(subIm2,'BoundingBox');
+    filteredSt = st;
+    acceptedSt = false(1,length(st))';
 
+    %% Remove trash bounding boxes
+    % For each bounding box
+    for i = 1:length(st)
+        thisBB = filteredSt(i).BoundingBox;
 
-halfBWidth = barWidth/2;
-
-% Show the subimage along with stafflines
-imshow(subIm2);
-
-for i=1:20
-    line([0,size(subIm2,2)],[barWidth*i, barWidth*i],'LineWidth',1,'Color','red');
-end
-
-
-
-%%
-%For each centroid
-%, y, w, h
-
-for i=1:length(centroids2)
-%<<<<<<< HEAD
-    thisX = centroids2(i,1);
-    thisY = centroids2(i,2);
-    BB = [];
-
-    
+        x = round(thisBB(1));
+        y = round(thisBB(2));
+        w = thisBB(3)-1;
+        h = thisBB(4)-1;
  
- %   hold on;
-   % plot(thisX,thisY,'*'); 
-
-
-   %  pause(1);
-    noBars = round(thisY/halfBWidth);
-    pause(0.1);
-
-
-    thisX = centroids2(i,1);        % get X-coord
-    thisY = centroids2(i,2);        % get Y-coord
-    plot(x,y,'*');                  % Plot centroid in image
-    noBars = thisY/halfBWidth;                         % Get number of half-bars from top
-    noteSheet=[noteSheet, notes(round(noBars))];       % Push the note into noteSheet
-    %pause(0.1);
-end
-for i=1:20
-    line([0,size(subIm2,2)],[halfBWidth*i, halfBWidth*i],'LineWidth',1,'Color','red');
-end
-
-imshow(subIm2);
-noteSheet
-
-%% loop over entroids and see what boundingbox it is in
-for i=1:length(centroids2)
-    thisX = centroids2(i,1);
-    thisY = centroids2(i,2);
-    BB = [];
-    for j=1:length(filteredSt)
-        BB = filteredSt(i).BoundingBox; %extract the boundingbox from the struct containg the bounding boxes
-        % top.x <= X <= top.x + w && top.y <= y <= top.y + h
-        if ((BB(1) <= thisX <= BB(1)+BB(3)) && (BB(2) <= thisY <= BB(2)+BB(4)))
-            break;
-        end
         
+        %   (x,y)-------(x+w,y)
+        %     |            |
+        %     |            |
+        %     |            |
+        %  (x,y+h)-----(x+w,y+h)
+
+        % if bounding box in CThresh does NOT contain ones
+        if( ~any(any(subIm(y:y+h, x:x+w))))
+            acceptedSt(i)=1;
+        end
     end
+
+    % Removes elements where acceptedSt = 1
+    filteredSt(acceptedSt) = [];
+%%
+    imshow(subIm2);
+
+    for k = 1 : length(filteredSt)
+        thisBB = filteredSt(k).BoundingBox;
+        rectangle('Position', [thisBB(1),thisBB(2),thisBB(3),thisBB(4)],...
+            'EdgeColor','r','LineWidth',2  )
+
+    end
+    %%
+    s = regionprops(subIm, 'centroid');         % Find the centroids in the subimage
+
+    centroids = [s.Centroid];                   % Convert the centroids struct to 2 vectors
+    x = centroids(1:2:end-1);
+    y = centroids(2:2:end);
+
+    centroids2 = zeros(length(x), 2);           % Merge the x,y vector into a single vector of pairs
+    centroids2(:,1) = x;
+    centroids2(:,2) = y;
+
+
+    sortedCentroids = sortrows(centroids2, 1);  % Sort centroids by x
+
+
+    halfBWidth = barWidth/2;
+
+    % Show the subimage along with stafflines
+    imshow(subIm2); hold on;
+    plot(x,y,'*');
+
+    for i=1:20
+        line([0,size(subIm2,2)],[barWidth*i, barWidth*i],'LineWidth',1,'Color','red');
+    end
+
+
+
+    %%
+    %For each centroid
+    %, y, w, h
+
+    for i=1:length(centroids2)
+
+        thisX = centroids2(i,1);        % get X-coord
+        thisY = centroids2(i,2);        % get Y-coord
+        noBars = thisY/halfBWidth;                         % Get number of half-bars from top
+        noteSheet=[noteSheet, notes(round(noBars))];       % Push the note into noteSheet
+    end
+    for i=1:20
+        line([0,size(subIm2,2)],[halfBWidth*i, halfBWidth*i],'LineWidth',1,'Color','red');
+    end
+
+    imshow(subIm2);
+    noteSheet
+
 end
