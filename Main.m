@@ -199,15 +199,7 @@ for n=1:size(stafflineMatrix,1)
 
     % Removes elements where acceptedSt = 1
     filteredSt(acceptedSt) = [];
-%%
-    imshow(subIm2);
 
-    for k = 1 : length(filteredSt)
-        thisBB = filteredSt(k).BoundingBox;
-        rectangle('Position', [thisBB(1),thisBB(2),thisBB(3),thisBB(4)],...
-            'EdgeColor','r','LineWidth',2  )
-
-    end
     %%
     s = regionprops(subIm, 'centroid');         % Find the centroids in the subimage
 
@@ -225,6 +217,7 @@ for n=1:size(stafflineMatrix,1)
 
     halfBWidth = barWidth/2;
 
+    %{ 
     % Show the subimage along with stafflines
     imshow(subIm2); hold on;
     plot(x,y,'*');
@@ -232,25 +225,64 @@ for n=1:size(stafflineMatrix,1)
     for i=1:20
         line([0,size(subIm2,2)],[barWidth*i, barWidth*i],'LineWidth',1,'Color','red');
     end
-
+    %}
 
 
     %%
     %For each centroid
     %, y, w, h
-
+    imshow(subIm2);
+    hold on;
+    
     for i=1:length(centroids2)
 
         thisX = centroids2(i,1);        % get X-coord
         thisY = centroids2(i,2);        % get Y-coord
         noBars = thisY/halfBWidth;                         % Get number of half-bars from top
-        noteSheet=[noteSheet, notes(round(noBars))];       % Push the note into noteSheet
-    end
-    for i=1:20
-        line([0,size(subIm2,2)],[halfBWidth*i, halfBWidth*i],'LineWidth',1,'Color','red');
-    end
+        currNotePitch = notes(round(noBars));
+        imshow(subIm2);
+        hold on;
+        plot(thisX,thisY, '*');
+        
+        %% find which bounding box current note is in
+        % for each boundingbox
+        for b=1:length(filteredSt)
+            
+            thisBB = filteredSt(b).BoundingBox;
 
-    imshow(subIm2);
-    noteSheet
+            x = round(thisBB(1));
+            y = round(thisBB(2));
+            w = thisBB(3)-1;
+            h = thisBB(4)-1;
+            
+            imshow(subIm2);
+            hold on;
+            
+            % if centroid is in current boundingbox
+            if( x<thisX && thisX<x+w && ...
+                y<thisY && thisY<y+h) 
+                rectangle('Position', [thisX-barWidth,y,1.6*barWidth,h],...
+                'EdgeColor','r','LineWidth',2  );
+                subNoteIm = subIm2(y:y+h,thisX-barWidth:thisX+0.6*barWidth);
+                
+                % Function to classificate notespeed
+                currNotePitch = noteClassificate(currNotePitch, subNoteIm)
+                
+                figure;
+                imshow(subNoteIm);
+                break;
+            end 
+        end
+    end
+    % Finaly, push the note into noteSheet
+    noteSheet=[noteSheet, currNotePitch];       
 
 end
+
+noteSheet
+
+
+
+
+
+
