@@ -201,6 +201,7 @@ for n=1:size(stafflineMatrix,1)
     filteredSt(acceptedSt) = [];
 
     %%
+    
     s = regionprops(subIm, 'centroid');         % Find the centroids in the subimage
 
     centroids = [s.Centroid];                   % Convert the centroids struct to 2 vectors
@@ -213,7 +214,20 @@ for n=1:size(stafflineMatrix,1)
 
 
     sortedCentroids = sortrows(centroids2, 1);  % Sort centroids by x
-
+    filteredSt(1).notePos = [];
+    for i=1:length(filteredSt)
+        for j=1:length(centroids2)
+            thisBB = filteredSt(i).BoundingBox;
+            thisCT = centroids2(j, :);
+            % if statement to see if centroid is inside the boundingbox
+            if (thisCT(1) > thisBB(1) && thisCT(1) < thisBB(1) + thisBB(3) ...
+                    && thisCT(2) > thisBB(2) && thisCT(2) < thisBB(2) + thisBB(4))
+                filteredSt(i).notePos = [filteredSt(i).notePos;thisCT];
+            end
+        end
+    end
+  
+    
 
     halfBWidth = barWidth/2;
 
