@@ -255,8 +255,8 @@ for n=1:size(stafflineMatrix,1)
             w = thisBB(3)-1;
             h = thisBB(4)-1;
             
-            imshow(subIm2);
-            hold on;
+            %imshow(subIm2);
+            %hold on;
             
             % if centroid is in current boundingbox
             if( x<thisX && thisX<x+w && ...
@@ -264,12 +264,21 @@ for n=1:size(stafflineMatrix,1)
                 %rectangle('Position', [thisX-barWidth,y,1.6*barWidth,h],...
                 %'EdgeColor','r','LineWidth',2  );
                 
-                if(thisY < size(subIm2,1))
-                    subNoteIm = subIm2(y:y+h,thisX:thisX+1.0*barWidth);
-                else 
-                    subNoteIm = subIm2(y:y+h,thisX-0.6*barWidth:thisX);
+                %If in top of bounding box
+                if(thisY > h/2)
+                    subNoteIm = subIm2(y+1*barWidth:y+h,thisX-1.5*barWidth:thisX+0.5*barWidth);
+                else
+                    subNoteIm = subIm2(y-1*barWidth:y-h,thisX-1.5*barWidth:thisX+0.5*barWidth);
                 end
+                        
+                
+                %if(thisY < size(subIm2,1))
+                %    subNoteIm = subIm2(y+2*barWidth:y+h,thisX-1.2*barWidth:thisX+0.5*barWidth);
+                %else 
+                %    subNoteIm = subIm2(y-2*barWidth:y+h,thisX-1.2*barWidth:thisX+0.5*barWidth);
+                %end
                 % Function to classificate notespeed
+                %%
                 currNotePitch = noteClassificate(currNotePitch, subNoteIm)
                 
                 figure;
