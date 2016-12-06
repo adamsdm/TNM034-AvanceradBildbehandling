@@ -93,7 +93,7 @@ barWidth = mean(mean(barWidth));        % Finally, mean the values in the matrix
 % TODO (Optimal recognition of music symbols, 3.2)
 % "line track height algorithm with the stable path algorithm
 % to remove staff lines"
-BWRotated = imrotate(BW,A,'bicubic');
+BWRotated = imrotate(BW,A,'bilinear');
 
 se = zeros(3,3);
 se(:,2)=1;
@@ -107,6 +107,7 @@ imshow(BWRotatedNoStaff);
 %% Corrolation and template matching
 template = imread('NoteheadTemplate.png');
 template = im2bw(template,0.9);
+
 
 % resize height of image to 130% of barwidth
 tempRez = imresize(template, (1/0.72)*[barWidth NaN]);
@@ -128,10 +129,7 @@ for i=1:length(locs)
 end
 %%
 close all;
-CThresh = (C>0.7*max(max(C)));
-
-%Remove G-glef 
-CThresh(:,1:0.05*size(CThresh,2)) = 0;
+CThresh = (C>0.78*max(max(C)));
 imshow(CThresh);
 for i=1:length(locs)
     line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
@@ -157,8 +155,8 @@ notes = cellstr(notes);
 noteSheet = '';
 
 % for each system
-%for n=1:size(stafflineMatrix,1) 
-for n=2:2
+for n=1:size(stafflineMatrix,1)
+    
     barWidth = diff(stafflineMatrix(n,:),1,2);   % calculate difference in rows
     barWidth = mean(mean(barWidth));
 
@@ -249,12 +247,11 @@ for n=2:2
         rectangle('Position', [x,y,w,h],...
                 'EdgeColor','r','LineWidth',2  );
         
-        firstNoteHeight = y+h-filteredSt(boundInd).notePos(1,2)
+        
+        % Check if first note is in lower half to select subNoteImages from
         inUpper = false;
         
-        y+h-filteredSt(boundInd).notePos(:,2);
-        
-        if firstNoteHeight >= h/2
+        if filteredSt(boundInd).notePos(1,2) <= size(subIm2,1)/2
             inUpper = true;
         end 
             
@@ -271,23 +268,17 @@ for n=2:2
             
             if noNotesInBB == 1
                 if inUpper
-                    subNoteIm = subIm2(thisY+barWidth:thisY+h-0.5*barWidth, thisX-1*barWidth:thisX);
+                    subNoteIm = subIm2(thisY+barWidth:thisY+h-barWidth, x:x+w);
+                    imshow(subNoteIm);
                 else
-                    subNoteIm = subIm2(thisY-h+0.5*barWidth:thisY-barWidth, thisX:thisX+1*barWidth);
+                    subNoteIm = subIm2(thisY-barWidth:thisY-h+barWidth, x:x+w);
                 end
-                
-                currNotePitch = noteClassificate1(currNotePitch, subNoteIm);
+                %currNotePitch = noteClassificate1(currNotePitch, subNoteIm);
             
             elseif noNotesInBB == 2                             % If 2 notes in boundingbox -> eigth note
                 currNotePitch = lower(currNotePitch);
             
-            elseif noNotesInBB ==3  
-                if inUpper
-                    subNoteIm = subIm2(thisY+barWidth:thisY+h-0.5*barWidth, thisX-1*barWidth:thisX);
-                else
-                    subNoteIm = subIm2(thisY-h+0.5*barWidth:thisY-barWidth, thisX:thisX+1*barWidth);
-                end
-                imshow(subNoteIm);
+            elseif noNotesInBB ==3    
                 currNotePitch = noteClassificate3(currNotePitch, subNoteIm);
             
             elseif noNotesInBB == 4                             % If 4 notes in boundingbox -> sixteenth note
@@ -295,6 +286,7 @@ for n=2:2
             else
                currNotePitch = ''                               % Must be 32th notes
             end
+            
             noteSheet=[noteSheet, currNotePitch];      
 
 
@@ -308,7 +300,7 @@ noteSheet
     
     
     
-%{
+
     %% OLD CODE
     %For each centroid
     %, y, w, h
@@ -355,9 +347,12 @@ noteSheet
     end
     % Finaly, push the note into noteSheet
     noteSheet=[noteSheet, currNotePitch];       
+
+end
+
 noteSheet
 
-%}
+
 
 
 
