@@ -157,8 +157,7 @@ notes = cellstr(notes);
 noteSheet = '';
 
 % for each system
-%for n=1:siclcze(stafflineMatrix,1) 
-for n=3:3
+for n=1:size(stafflineMatrix,1) 
     barWidth = diff(stafflineMatrix(n,:),1,2);   % calculate difference in rows
     barWidth = mean(mean(barWidth));
 
@@ -372,6 +371,7 @@ for n=3:3
        end
            
     end 
+    noteSheet=[noteSheet, 'n'];
 end % for-system
     
 noteSheet
