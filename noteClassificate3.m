@@ -20,6 +20,7 @@ function [ outNote ] = noteClassificate3(currNotePitch, subNoteIm);
     filteredPeaks = pks(peakFilter);
     filteredLocs = locs(peakFilter);
 
+    
     plot(hist); hold on;
     plot(filteredLocs, filteredPeaks, '*');
     

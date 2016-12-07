@@ -157,8 +157,8 @@ notes = cellstr(notes);
 noteSheet = '';
 
 % for each system
-%for n=1:size(stafflineMatrix,1) 
-for n=2:2
+%for n=1:siclcze(stafflineMatrix,1) 
+for n=3:3
     barWidth = diff(stafflineMatrix(n,:),1,2);   % calculate difference in rows
     barWidth = mean(mean(barWidth));
 
@@ -242,14 +242,14 @@ for n=2:2
         y = thisBB(2);
         w = thisBB(3);
         h = thisBB(4);
-        noNotesInBB = size(filteredSt(boundInd).notePos,1)
+        noNotesInBB = size(filteredSt(boundInd).notePos,1);
         
         
         imshow(subIm2); hold on;
         rectangle('Position', [x,y,w,h],...
                 'EdgeColor','r','LineWidth',2  );
         
-        firstNoteHeight = y+h-filteredSt(boundInd).notePos(1,2)
+        firstNoteHeight = y+h-filteredSt(boundInd).notePos(1,2);
         inUpper = false;
         
         y+h-filteredSt(boundInd).notePos(:,2);
@@ -270,31 +270,102 @@ for n=2:2
             currNotePitch = notes(round(noBars));
             
             if noNotesInBB == 1
+                
                 if inUpper
-                    subNoteIm = subIm2(thisY+barWidth:thisY+h-0.5*barWidth, thisX-1*barWidth:thisX);
+                    low = thisY+0.5*barWidth;
+                    high = thisY+h-0.5*barWidth;
+                    leftBound = thisX-1.4*barWidth;
+                    rightBound = thisX+0.5*barWidth;                    
                 else
-                    subNoteIm = subIm2(thisY-h+0.5*barWidth:thisY-barWidth, thisX:thisX+1*barWidth);
+                    low = thisY-h;
+                    high = thisY-0.5*barWidth;
+                    leftBound = thisX-0.4*barWidth;
+                    rightBound = thisX+1.5*barWidth;
                 end
                 
+                low = clamp(low,0, size(subIm2,1));
+                high = clamp(high,0, size(subIm2,1));
+                subNoteIm = subIm2(low:high, leftBound:rightBound);
                 currNotePitch = noteClassificate1(currNotePitch, subNoteIm);
             
-            elseif noNotesInBB == 2                             % If 2 notes in boundingbox -> eigth note
-                currNotePitch = lower(currNotePitch);
-            
-            elseif noNotesInBB ==3  
+            elseif noNotesInBB == 2
                 if inUpper
-                    subNoteIm = subIm2(thisY+barWidth:thisY+h-0.5*barWidth, thisX-1*barWidth:thisX);
+                    low = thisY+barWidth;
+                    high = thisY+h-0.5*barWidth;
+                    
+                    if noteInd == 1
+                        leftBound = thisX-0.5*barWidth;
+                        rightBound = thisX+0.5*barWidth;
+                                            %
+                    else
+                        leftBound = thisX-1.2*barWidth;
+                        rightBound = thisX+0.2*barWidth;
+                    end
                 else
-                    subNoteIm = subIm2(thisY-h+0.5*barWidth:thisY-barWidth, thisX:thisX+1*barWidth);
+                    low = thisY-h+0.5*barWidth;
+                    high = thisY-barWidth;
+                    
+                    if noteInd == 1
+                        leftBound = thisX;
+                        rightBound = thisX+1.2*barWidth;
+                                       
+                    else noteInd == 2
+                        leftBound = thisX-0.5*barWidth;
+                        rightBound = thisX+1.5*barWidth;
+                    end                      
                 end
-                imshow(subNoteIm);
+                low = clamp(low,0, size(subIm2,1));
+                high = clamp(high,0, size(subIm2,1));
+                subNoteIm = subIm2(low:high, leftBound:rightBound);
+                currNotePitch = noteClassificate3(currNotePitch, subNoteIm);
+            
+            elseif noNotesInBB ==3
+                
+                if inUpper
+                    low = thisY+barWidth;
+                    high = thisY+h-0.5*barWidth;
+                    
+                    if noteInd == 1
+                        leftBound = thisX-0.5*barWidth;
+                        rightBound = thisX+0.5*barWidth;
+                                            %
+                    elseif noteInd == 2
+                        leftBound = thisX-1.2*barWidth;
+                        rightBound = thisX+0.2*barWidth;
+                    else 
+                        leftBound = thisX-1.5*barWidth;
+                        rightBound = thisX-0.5*barWidth;
+                    end                    
+                else
+                    low = thisY-h+0.5*barWidth;
+                    high = thisY-barWidth;
+                    
+                    if noteInd == 1
+                        leftBound = thisX;
+                        rightBound = thisX+1.2*barWidth;
+                                       
+                    elseif noteInd == 2
+                        leftBound = thisX-0.5*barWidth;
+                        rightBound = thisX+1.5*barWidth;
+                    else 
+                        leftBound = thisX-0.8*barWidth;
+                        rightBound = thisX+0.4*barWidth;
+                    end                      
+                end
+                low = clamp(low,0, size(subIm2,1));
+                high = clamp(high,0, size(subIm2,1));
+                subNoteIm = subIm2(low:high, leftBound:rightBound);
                 currNotePitch = noteClassificate3(currNotePitch, subNoteIm);
             
             elseif noNotesInBB == 4                             % If 4 notes in boundingbox -> sixteenth note
                 currNotePitch = '';
             else
-               currNotePitch = ''                               % Must be 32th notes
+               currNotePitch = '';                              % Must be 32th notes
             end
+            
+            %currNotePitch
+            %figure;
+            %imshow(subNoteIm);
             noteSheet=[noteSheet, currNotePitch];      
 
 
@@ -308,57 +379,3 @@ noteSheet
     
     
     
-%{
-    %% OLD CODE
-    %For each centroid
-    %, y, w, h
-    
-    for i=1:length(centroids2)
-
-        thisX = centroids2(i,1);        % get X-coord
-        thisY = centroids2(i,2);        % get Y-coord
-        noBars = thisY/halfBWidth;                         % Get number of half-bars from top
-        currNotePitch = notes(round(noBars));
-        imshow(subIm2); hold on;
-        plot(thisX,thisY, '*');
-        
-        %% find which bounding box current note is in
-        % for each boundingbox
-        for b=1:length(filteredSt)
-            
-            thisBB = filteredSt(b).BoundingBox;
-
-            x = round(thisBB(1));
-            y = round(thisBB(2));
-            w = thisBB(3)-1;
-            h = thisBB(4)-1;
-            
-            % if centroid is in current boundingbox
-            if( x<thisX && thisX<x+w && ...
-                y<thisY && thisY<y+h) 
-                %rectangle('Position', [thisX-barWidth,y,1.6*barWidth,h],...
-                %'EdgeColor','r','LineWidth',2  );
-                
-                %If in top of bounding box
-                if(thisY > h/2)
-                    subNoteIm = subIm2(y+1*barWidth:y+h,thisX-1.5*barWidth:thisX+0.5*barWidth);
-                else
-                    subNoteIm = subIm2(y-1*barWidth:y-h,thisX-1.5*barWidth:thisX+0.5*barWidth);
-                end
-                        
-                
-                currNotePitch = noteClassificate(currNotePitch, subNoteIm);
-                
-                break;
-            end 
-        end
-    end
-    % Finaly, push the note into noteSheet
-    noteSheet=[noteSheet, currNotePitch];       
-noteSheet
-
-%}
-
-
-
-

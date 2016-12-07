@@ -16,7 +16,7 @@ function [ outNote ] = noteClassificate1(currNotePitch, subNoteIm);
     
     plot(hist);
     % remove peaks less than 60% of max peak
-    peakFilter = pks>5;  
+    peakFilter = pks>4;  
     
     
     filteredPeaks = pks(peakFilter);
@@ -26,7 +26,7 @@ function [ outNote ] = noteClassificate1(currNotePitch, subNoteIm);
     plot(filteredLocs, filteredPeaks, '*');
     
     %Eight note
-    if(length(filteredPeaks) == 1)
+    if(length(filteredPeaks) > 0)
         outNote = lower(currNotePitch)
         return
     % Fourth note
