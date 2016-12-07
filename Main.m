@@ -140,6 +140,7 @@ figure;
 imshow(BWRotatedNoStaff);
 
 
+
 invBWRotatedNoStaff = BWRotatedNoStaff<1;
 
 %%
@@ -154,15 +155,18 @@ y = centroids(2:2:end);
 
 notes = ['F4'; 'E4'; 'D4'; 'C4'; 'B3'; 'A3'; 'G3'; 'F3'; 'E3'; 'D3'; 'C3'; 'B2'; 'A2'; 'G2'; 'F2'; 'E2'; 'D2'; 'C2'; 'B2'; 'A2'; 'G1' ];
 notes = cellstr(notes);
-noteSheet = '';
+noteSheet='';
 
 % for each system
-for n=1:size(stafflineMatrix,1) 
+for n=1:size(stafflineMatrix,1)
     barWidth = diff(stafflineMatrix(n,:),1,2);   % calculate difference in rows
     barWidth = mean(mean(barWidth));
-
     top = stafflineMatrix(n,1)-4*barWidth;      % Get top y-value of system
     bot = stafflineMatrix(n,5)+4*barWidth;      % Get top y-value of system
+
+
+    subIm = CThresh(top:bot, :);                % Select the subimage from
+    subIm2 = invBWRotatedNoStaff(top:bot, :);          % Select the subimage from
 
     subImNoTransform = BWRotatedNoStaff(top:bot, :);
 
@@ -375,7 +379,4 @@ for n=1:size(stafflineMatrix,1)
 end % for-system
     
 noteSheet
-    
-    
-    
-    
+
