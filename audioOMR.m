@@ -3,6 +3,7 @@
 % This string will be translated to an audio file. 
 % A big letter is a 4th note and a small letter is a 8th note
 exampleString = {'G1', 'a1', 'B1' ,'C2', 'D2', 'D2', 'G2', 'G2'};
+exampleString = noteSheet;
 
 % Frequencies of the notes can be found at:
 % http://www.phy.mtu.edu/~suits/notefreqs.html

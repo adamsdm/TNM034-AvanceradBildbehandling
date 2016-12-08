@@ -23,6 +23,7 @@ A = findBestRotAngle(Im);
 invBWRotated = imrotate(invBW, A,'bilinear');   % Rotate the image with the angle obtained
 
 maxVals = sum(invBWRotated(:,:)');              % calculate the histogram by summing pixels horizontally
+plot(maxVals);
 %%
 [peaks, locs] = findpeaks(maxVals);             % Find peak locations, stemlines y value = locs
 
@@ -56,6 +57,9 @@ indToRemove = logical(indToRemove);
 locs(indToRemove) = [];
 peaks(indToRemove) = [];
 
+stem(locs,peaks);
+
+
 %% Remove trash peaks from locs and peaks
 
 index=1;
@@ -73,6 +77,10 @@ end
 exclude = locs < 0; %Logicall array containing positions where locs is negative
 locs(exclude) = [];
 peaks(exclude) = [];
+
+stem(locs,peaks,'r');
+
+
 
 
 %% Show found peak locations in image;
@@ -149,8 +157,8 @@ C = normxcorr2(noteTempRez, BWRotatedNoStaff);
 
 %%
 % Remove border from C which normxcorr2 adds
-yoffset = int16((size(C,1)-size(BWRotatedNoStaff,1))/2);
-xoffset = int16((size(C,2)-size(BWRotatedNoStaff,2))/2);
+yoffset = int16((size(C,1)-size(BWRotatedNoStaff,1))/2)
+xoffset = int16((size(C,2)-size(BWRotatedNoStaff,2))/2)
 
 
 
@@ -164,6 +172,14 @@ CThresh = (C>0.78*max(max(C)));
 
 CThresh(:,1:gClefXMean) = 0;
 
+for i=1:length(locs)
+    line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
+end
+figure;
+imshow(BWRotatedNoStaff);
+
+
+
 invBWRotatedNoStaff = BWRotatedNoStaff<1;
 
 %%
@@ -173,7 +189,12 @@ centroids = [s.Centroid];
 x = centroids(1:2:end-1);
 y = centroids(2:2:end);
 
+imshow(CThresh); hold on;
+for i=1:length(locs)
+    line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
+end
 
+plot(x,y,'*');
 
 
 %% 
@@ -263,6 +284,14 @@ for n=1:size(stafflineMatrix,1)
   
     halfBWidth = barWidth/2;
     subIm3 = invBWRotated(top:bot, :);                % Select the subimage from;
+    imshow(subIm3); hold on;
+    plot(x,y,'*');
+    
+    for u = 1:11
+        line([0,size(Im,2)],[u*2*halfBWidth,u*2*halfBWidth],'LineWidth',1,'Color','red');
+    end
+    
+    line([0,size(Im,2)],[size(subIm3,1)/2,size(subIm3,1)/2],'LineWidth',2,'Color','blue');
     
     %% for each boundingbox
     for boundInd = 1:length(filteredSt)
@@ -272,7 +301,12 @@ for n=1:size(stafflineMatrix,1)
         w = thisBB(3);
         h = thisBB(4);
         noNotesInBB = size(filteredSt(boundInd).notePos,1);
-
+        
+        
+        imshow(subIm3); hold on;
+        rectangle('Position', [x,y,w,h],...
+                'EdgeColor','r','LineWidth',2  );
+        
         firstNoteHeight = y+h-filteredSt(boundInd).notePos(1,2);
         inUpper = false;
         
@@ -296,7 +330,7 @@ for n=1:size(stafflineMatrix,1)
             
             noBars = round(dy/(halfBWidth) );            
             
-            currNotePitch = notes(12-round(noBars));
+            currNotePitch = notes(12-round(noBars))
 
             %%
             if noNotesInBB == 1
@@ -360,6 +394,11 @@ for n=1:size(stafflineMatrix,1)
                 currNotePitch = noteClassificate3(currNotePitch, subNoteIm);
             end
             
+            %DEBUG
+            %currNotePitch
+            %figure;
+            %imshow(subNoteIm);
+            
             noteSheet=[noteSheet, currNotePitch];      
 
 
@@ -368,6 +407,9 @@ for n=1:size(stafflineMatrix,1)
     end 
     noteSheet=[noteSheet, 'n'];
 end % for-system
+    
+noteSheet
+
 
 end
 

@@ -1,8 +1,9 @@
 function [ outNote ] = noteClassificate3(currNotePitch, subNoteIm);
     outNote = currNotePitch;
-    
+    [s,t] = size(subNoteIm);
+
     % If for some reason the input image is empty
-    if isempty(subNoteIm)  
+    if isempty(subNoteIm) || s<3 || t<3 
         outNote = strcat(outNote,'!');
         return;
     end
@@ -21,8 +22,8 @@ function [ outNote ] = noteClassificate3(currNotePitch, subNoteIm);
     filteredLocs = locs(peakFilter);
 
     
-    plot(hist); hold on;
-    plot(filteredLocs, filteredPeaks, '*');
+    %plot(hist); hold on;
+    %plot(filteredLocs, filteredPeaks, '*');
     
     %Eight note
     if(length(filteredPeaks) == 1)
