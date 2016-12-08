@@ -47,20 +47,22 @@ xlabel('Staff line locations, Y-value');
 medianBarWidth = median(diff(locs)); % Find median bar width
 medianBarWidth = medianBarWidth+2; 
 
+indToRemove = zeros(length(peaks));
 % Compare peak 1 to (length-1)
 for peakInd = 1:length(peaks)-1
     % if dx<medBarW/2
     if locs(peakInd+1)-locs(peakInd) < medianBarWidth/2
         
         if peaks(peakInd)<peaks(peakInd+1)
-          indToRemove = peakInd;
+          indToRemove(peakInd) = 1;
         elseif peaks(peakInd)>peaks(peakInd+1)
-          indToRemove = peakInd+1;
+          indToRemove(peakInd+1) = 1;
         end
         
     end
 end
 
+indToRemove = logical(indToRemove);
 locs(indToRemove) = [];
 peaks(indToRemove) = [];
 
@@ -68,7 +70,6 @@ stem(locs,peaks);
 
 
 %% Remove trash peaks from locs and peaks
-[peaks, locs] = findpeaks(maxVals); % TEMP DELETE THIS LINE
 
 index=1;
 while( index < length(locs-5)) 
