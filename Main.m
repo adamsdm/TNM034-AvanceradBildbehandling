@@ -6,7 +6,7 @@
 % PREPROCESSING
 clear all;
 close all;
-Im = imread('./Testbilder/im1s.jpg'); % Read the image
+Im = imread('./Testbilder/im10s.jpg'); % Read the image
 Im = im2double( Im ); % Convert image to double
 
 level = graythresh(Im); % Computes the global threshold level from the image
@@ -14,7 +14,7 @@ BW = im2bw(Im,level);   % Convert the image to binary image with threshold: leve
 
 %BW2 = bwmorph(BW,'close',2);
 
-imshow(Im);
+imshow(BW);
 
 
 %% Find staff lines
@@ -34,7 +34,7 @@ plot(maxVals);
 [peaks, locs] = findpeaks(maxVals);             % Find peak locations, stemlines y value = locs
 
 maxValsThresh = 0.3*max(max(peaks));
-maxVals(maxVals < maxValsThresh) = 0;                     % Removes all noise below a certain threshold
+maxVals(maxVals < maxValsThresh) = 0;           % Removes all noise below a certain threshold
 
 [peaks, locs] = findpeaks(maxVals);             % Find peak locations, stemlines y value = locs
 
@@ -42,11 +42,33 @@ plot(maxVals); hold on;
 scatter(locs,peaks,'r');
 xlabel('Staff line locations, Y-value');
 
-%% Remove trash peaks from locs and peaks
-[peaks, locs] = findpeaks(maxVals); % TEMP DELETE THIS LINE
+%% If two peaks are very close together, only keep the max of the two peaks
 
 medianBarWidth = median(diff(locs)); % Find median bar width
 medianBarWidth = medianBarWidth+2; 
+
+% Compare peak 1 to (length-1)
+for peakInd = 1:length(peaks)-1
+    % if dx<medBarW/2
+    if locs(peakInd+1)-locs(peakInd) < medianBarWidth/2
+        
+        if peaks(peakInd)<peaks(peakInd+1)
+          indToRemove = peakInd;
+        elseif peaks(peakInd)>peaks(peakInd+1)
+          indToRemove = peakInd+1;
+        end
+        
+    end
+end
+
+locs(indToRemove) = [];
+peaks(indToRemove) = [];
+
+stem(locs,peaks);
+
+
+%% Remove trash peaks from locs and peaks
+[peaks, locs] = findpeaks(maxVals); % TEMP DELETE THIS LINE
 
 index=1;
 while( index < length(locs-5)) 
@@ -131,7 +153,7 @@ close all;
 CThresh = (C>0.7*max(max(C)));
 
 %Remove G-glef 
-CThresh(:,1:0.05*size(CThresh,2)) = 0;
+CThresh(:,1:0.07*size(CThresh,2)) = 0;
 imshow(CThresh);
 for i=1:length(locs)
     line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
