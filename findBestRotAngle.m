@@ -51,5 +51,19 @@ for angle2=A-1.0:0.1:A+1.0
     
 end
 
+maxPeak = 0.0;
+for angle3=A-0.1:0.01:A+0.1
+    rotIm = imrotate(Im, angle3, 'bicubic');
+    invBW = rotIm > T;
+    %imshow(invBW);
+    peak = max( sum(invBW(:,:)' ) ); 
+    
+    if(peak > maxPeak)
+       maxPeak = peak;
+       A = angle3
+    end
+    
+end
+
 end
 
