@@ -60,7 +60,7 @@ for angle3=A-0.1:0.01:A+0.1
     
     if(peak > maxPeak)
        maxPeak = peak;
-       A = angle3
+       A = angle3;
     end
     
 end
