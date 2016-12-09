@@ -1,2 +1,4 @@
-Im = imread('./Testbilder/im9s.jpg'); % Read the image
-TNM034(Im);
+Im = imread('./Testbilder/im1s.jpg'); % Read the image
+notes = TNM034(Im)
+
+

@@ -6,7 +6,7 @@
 % PREPROCESSING
 clear all;
 close all;
-Im = imread('./Testbilder/im9s.jpg'); % Read the image
+Im = imread('./Testbilder/im1s.jpg'); % Read the image
 Im = im2double( Im ); % Convert image to double
 
 level = graythresh(Im); % Computes the global threshold level from the image
@@ -388,7 +388,7 @@ for n=1:size(stafflineMatrix,1)
                     if noteInd == 1
                         leftBound = thisX-0.5*barWidth;
                         rightBound = thisX+0.5*barWidth;
-                                            %
+                                            
                     elseif noteInd == noNotesInBB           % All notes in middle
                         leftBound = thisX-1.5*barWidth;
                         rightBound = thisX-0.5*barWidth;
@@ -431,7 +431,9 @@ for n=1:size(stafflineMatrix,1)
        end
            
     end 
-    noteSheet=[noteSheet, 'n'];
+    if(n < size(staffLineMatrix, 1))
+        noteSheet=[noteSheet, 'n'];
+    end
 end % for-system
     
 noteSheet

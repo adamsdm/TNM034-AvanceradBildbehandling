@@ -366,8 +366,15 @@ for n=1:size(stafflineMatrix,1)
        end
            
     end 
-    noteSheet=[noteSheet, 'n'];
+    if n < size(stafflineMatrix, 1)
+        noteSheet=[noteSheet, 'n'];
+    end
 end % for-system
 
+noteSheet = strjoin(noteSheet);
+noteSheet(ismember(noteSheet,' ,.:;!')) = [];
+
 end
+
+
 
