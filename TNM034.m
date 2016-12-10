@@ -98,9 +98,18 @@ imgTransformed=imwarp(ImPAD,R,Tform,'OutputView',R);
 
 Im = imgTransformed(yMin:yMax,xMin:xMax,:);
 
+%%
+initPSF = [1 1 1 1]/4; 
+
+ImGrayDouble = rgb2gray(Im);
+[J,noise] = wiener2(ImGrayDouble,[3 3]);
+[J2,PSF] = deconvblind(ImGrayDouble, initPSF);
+signal_var = var(ImGrayDouble(:));
+ImGrayDouble = deconvwnr(J, PSF, noise/signal_var);
 
 %% Normalize image background (dynamically) by dividing with local maximum
 ImGrayDouble = rgb2gray(Im);
+
 func = @(block_struct) (block_struct.data./max(max(block_struct.data)));
 Im2 = blockproc(ImGrayDouble, [9 9], func);
 
