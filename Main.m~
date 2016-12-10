@@ -6,15 +6,115 @@
 % PREPROCESSING
 clear all;
 close all;
-Im = imread('./Testbilder/im9s.jpg'); % Read the image
-Im = im2double( Im ); % Convert image to double
+Im = imread('./Testbilder/im3c.jpg'); % Read the image
+Im = im2double(Im);
 
-level = graythresh(Im); % Computes the global threshold level from the image
-BW = im2bw(Im,level);   % Convert the image to binary image with threshold: level
 
-%BW2 = bwmorph(BW,'close',2);
+% Normalize image background (dynamically) by dividing with local maximum
+ImGrayDouble = rgb2gray(Im);
+func = @(block_struct) (block_struct.data./max(max(block_struct.data)));
+Im2 = blockproc(ImGrayDouble, [9 9], func);
 
+level = graythresh(Im2); % Computes the global threshold level from the image
+BW = im2bw(Im2,level);   % Convert the image to binary image with threshold: level
+
+imshow(Im2);
+figure;
 imshow(BW);
+
+
+%% Masking
+[ySize, xSize] = size(Im);
+xSize = xSize/3;
+diff = 0.2;
+ImGrayTest = rgb2gray(Im);
+
+%%
+
+% Mask the area of the notesheet
+for i = 1:xSize -1
+    for j = 1:ySize -1
+        if(abs(Im(j, i, 1) - Im(j, i, 2)) < diff && abs(Im(j, i, 1) - Im(j, i, 3)) < diff)
+            ImGrayTest(j, i) = 0;
+        end
+    end
+end
+%%
+resMask = ImGrayTest > 0;
+se = strel('line',11,90);
+resMask = imerode(resMask, se);
+resMask = imdilate(resMask, se);
+
+points = detectHarrisFeatures(resMask);
+points = points.Location; %Extract the coordinates
+
+% Find corner points by finding the points closest to the corners of the
+% whole image
+
+resMaskInv = abs(resMask-1);
+resMaskPAD = padarray(resMaskInv,[20 20]);
+
+se1 = strel('disk',3);
+
+resMaskPAD = imopen(resMaskPAD, se1);
+resMaskPAD = imclose(resMaskPAD, se1);
+
+[y,x] = size(resMaskPAD);
+
+
+C = corner(resMaskPAD,'Harris');
+imshow(resMaskPAD); hold on;
+plot(C(:,1), C(:,2), '*');
+
+%%
+for p=1:length(C)
+    thisX = C(p,1);
+    thisY = C(p,2);
+    
+    
+    C(p,3)=pdist([0, 0; thisX, thisY], 'euclidean');       %top left
+    C(p,4)=pdist([x, 0; thisX, thisY], 'euclidean');       %top right
+    C(p,5)=pdist([0, y; thisX, thisY], 'euclidean');       %bottom left
+    C(p,6)=pdist([x, y; thisX, thisY], 'euclidean');       %bottom right
+end
+
+[~, ITL] = min(C(:,3)) ;
+[~, ITR] = min(C(:,4)) ;
+[~, IBL] = min(C(:,5)) ;
+[~, IBR] = min(C(:,6)) ;
+
+topLeft = C(ITL, 1:2);
+topRigt = C(ITR, 1:2);
+botLeft = C(IBL, 1:2);
+botRigt = C(IBR, 1:2);
+
+%%
+
+imshow(resMaskPAD);
+Im = 
+hold on
+plot(topLeft(1),topLeft(2), 'r*');
+plot(topRigt(1),topRigt(2), 'r*');
+plot(botLeft(1),botLeft(2), 'r*');
+plot(botRigt(1),botRigt(2), 'r*');
+
+
+%%
+close all;
+
+xMin = topLeft(1);
+xMax = botRigt(1);
+yMin = topLeft(2);
+yMax = botRigt(2);
+
+movingPoints=[topLeft; topRigt; botRigt; botLeft] %(x,y) coordinate
+fixedPoints= [xMin yMin; xMax yMin; xMax yMax; xMin yMax];
+
+
+Tform = fitgeotrans(movingPoints,fixedPoints,'projective');
+R=imref2d(size(Im),[1 size(Im,2)],[1 size(Im,1)]);
+imgTransformed=imwarp(Im,R,Tform,'OutputView',R);
+imshow(imgTransformed,[]); hold on;
 
 
 %% Find staff lines
@@ -30,6 +130,8 @@ invBWRotated = imrotate(invBW, A,'bilinear');   % Rotate the image with the angl
 
 maxVals = sum(invBWRotated(:,:)');              % calculate the histogram by summing pixels horizontally
 plot(maxVals);
+xlabel('y-position');
+ylabel('Peak height');
 %%
 [peaks, locs] = findpeaks(maxVals);             % Find peak locations, stemlines y value = locs
 
@@ -196,6 +298,7 @@ CThresh = (C>0.78*max(max(C)));
 
 CThresh(:,1:gClefXMean) = 0;
 
+temp = 
 
 imshow(CThresh);
 for i=1:length(locs)
@@ -220,7 +323,7 @@ for i=1:length(locs)
     line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
 end
 
-plot(x,y,'*');
+plot(x,y,['*', 'green']);
 
 
 %% 
@@ -388,7 +491,7 @@ for n=1:size(stafflineMatrix,1)
                     if noteInd == 1
                         leftBound = thisX-0.5*barWidth;
                         rightBound = thisX+0.5*barWidth;
-                                            %
+                                            
                     elseif noteInd == noNotesInBB           % All notes in middle
                         leftBound = thisX-1.5*barWidth;
                         rightBound = thisX-0.5*barWidth;
@@ -431,7 +534,9 @@ for n=1:size(stafflineMatrix,1)
        end
            
     end 
-    noteSheet=[noteSheet, 'n'];
+    if(n < size(staffLineMatrix, 1))
+        noteSheet=[noteSheet, 'n'];
+    end
 end % for-system
     
 noteSheet

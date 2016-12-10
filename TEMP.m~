@@ -1,0 +1,48 @@
+I = checkerboard();
+
+topLeft  = [10, 10];
+topRight = [67, 15];
+botLeft  = [12, 73];
+botRight = [71, 76];
+
+imshow(I); hold on;
+
+plot(topLeft(1),topLeft(2),'*');
+plot(topRight(1),topRight(2),'*');
+plot(botLeft(1),botLeft(2),'*');
+plot(botRight(1),botRight(2),'*');
+
+Pin = [topLeft', topRight', botLeft', botRight'];
+Pout= [0 80  0 80;
+       0  0 80 80];
+   
+V = homography_solve(Pin, Pout);
+
+Warped = imwarp(I, )
+%%
+
+A = imread('cameraman.tif');
+tform = affine2d([1.0 0.2 0.0; 
+                  0.2 1.0 0.0; 
+                  0.0 0.0 1.0])
+              
+A2 = imwarp(A, tform);
+
+imshow(A2);
+
+%%
+
+img = checkerboard();
+
+topLeft  = [10, 10];
+topRight = [67, 15];
+botLeft  = [12, 73];
+botRight = [71, 76];
+   
+movingPoints=[topLeft; 256 1; 256 256; 1 256] %(x,y) coordinate
+fixedPoints=[25 25;250 12;255 200;30 180];
+
+TFORM = fitgeotrans(movingPoints,fixedPoints,'projective');
+R=imref2d(size(img),[1 size(img,2)],[1 size(img,1)]);
+imgTransformed=imwarp(imread('cameraman.tif'),R,TFORM,'OutputView',R);
+imshow(imgTransformed,[]);

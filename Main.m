@@ -6,35 +6,26 @@
 % PREPROCESSING
 clear all;
 close all;
-Im = imread('./Testbilder/im1c.jpg'); % Read the image
+Im = imread('./Testbilder/im3c.jpg'); % Read the image
 Im = im2double(Im);
-% Normalize image background (dynamically) by dividing with local maximum
-ImGrayDouble = rgb2gray(Im);
-func = @(block_struct) (block_struct.data./max(max(block_struct.data)));
-Im2 = blockproc(ImGrayDouble, [9 9], func);
-
-level = graythresh(Im2); % Computes the global threshold level from the image
-BW = im2bw(Im2,level);   % Convert the image to binary image with threshold: level
-
-imshow(Im2);
-figure;
-imshow(BW);
-
 
 %% Masking
 [ySize, xSize] = size(Im);
 xSize = xSize/3;
-diff = 0.2;
+dChannel = 0.2;
 ImGrayTest = rgb2gray(Im);
+
+%%
 
 % Mask the area of the notesheet
 for i = 1:xSize -1
     for j = 1:ySize -1
-        if(abs(Im(j, i, 1) - Im(j, i, 2)) < diff && abs(Im(j, i, 1) - Im(j, i, 3)) < diff)
+        if(abs(Im(j, i, 1) - Im(j, i, 2)) < dChannel && abs(Im(j, i, 1) - Im(j, i, 3)) < dChannel)
             ImGrayTest(j, i) = 0;
         end
     end
 end
+
 %%
 resMask = ImGrayTest > 0;
 se = strel('line',11,90);
@@ -86,14 +77,55 @@ botRigt = C(IBR, 1:2);
 
 %%
 
-imshow(resMaskPAD);
+%imshow(resMaskPAD);
+ImPAD = padarray(Im,[20 20]); 
+imshow(ImPAD);
 hold on
 plot(topLeft(1),topLeft(2), 'r*');
 plot(topRigt(1),topRigt(2), 'r*');
 plot(botLeft(1),botLeft(2), 'r*');
 plot(botRigt(1),botRigt(2), 'r*');
 
-imshow(diff);
+
+%%
+close all;
+
+xMin = topLeft(1);
+xMax = botRigt(1);
+yMin = topLeft(2);
+yMax = botRigt(2);
+
+movingPoints=[topLeft; topRigt; botRigt; botLeft] %(x,y) coordinate
+fixedPoints= [xMin yMin; xMax yMin; xMax yMax; xMin yMax];
+
+
+Tform = fitgeotrans(movingPoints,fixedPoints,'projective');
+R=imref2d(size(ImPAD),[1 size(ImPAD,2)],[1 size(ImPAD,1)]);
+imgTransformed=imwarp(ImPAD,R,Tform,'OutputView',R);
+imshow(imgTransformed,[]); hold on;
+
+plot(xMin,yMin, '*');
+plot(xMax,yMin, '*');
+plot(xMax,yMax, '*');
+plot(xMin,yMax, '*');
+
+
+Im = imgTransformed(yMin:yMax,xMin:xMax,:);
+figure;
+imshow(Im);
+
+%% Normalize image background (dynamically) by dividing with local maximum
+ImGrayDouble = rgb2gray(Im);
+func = @(block_struct) (block_struct.data./max(max(block_struct.data)));
+Im2 = blockproc(ImGrayDouble, [9 9], func);
+
+level = graythresh(Im2); % Computes the global threshold level from the image
+BW = im2bw(Im2,level);   % Convert the image to binary image with threshold: level
+
+imshow(Im2);
+figure;
+imshow(BW);
+
 
 %% Find staff lines
 % HISTOGRAM

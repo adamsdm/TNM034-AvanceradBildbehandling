@@ -13,8 +13,4 @@ im9sfacit  = 'b2d3G3C4D3e3c3b2d3b3c4C4A3F3D3na3b3C4C4C4a3g3B3B3C4E3F3G3E3b2d3nG3
 im10sfacit = 'D3B3d3e3G3f3a3C4f3g3B3a3G3e3f3D3e3c3nC3f3D3f3g3C4g3f3E3g3c4C4a3g3nF3e3d3E3d3c3D3c3b2C3a2c3F3d3C3e3f3F3E3nC3A3c3e3G3f3a3C4f3g3A3b3G3e3f3D3e3c3nC3A3c3e3G3f3a3C4f3g3A3a3G3e3f3D3e3c3nf3g3f3E3g3b3C4a3g3F3e3d3E3d3c3nD3c3b2C3a2c3F3d3C3F3E3';
 
 lsteindist = strdist(notes, im10sfacit)
-%}
-
-%% 
-I = imread('cameraman.tif');
-Igpu = gpuArray(I); 
+%
