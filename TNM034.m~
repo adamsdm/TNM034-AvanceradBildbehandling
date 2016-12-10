@@ -283,6 +283,7 @@ notes = ['F4'; 'E4'; 'D4'; 'C4'; 'B3'; 'A3'; 'G3'; 'F3'; 'E3'; 'D3'; 'C3'; 'B2';
 notes = cellstr(notes);
 noteSheet='';
 
+
 % for each system
 for n=1:size(stafflineMatrix,1)
     barWidth = diff(stafflineMatrix(n,:),1,2);   % calculate difference in rows
@@ -349,8 +350,7 @@ for n=1:size(stafflineMatrix,1)
     centroids2 = zeros(length(x), 2);           % Merge the x,y vector into a single vector of pairs
     centroids2(:,1) = x;
     centroids2(:,2) = y;
-%% TEMP DELETE
-    imshow(subIm)
+
 %%
     sortedCentroids = sortrows(centroids2, 1);  % Sort centroids by x
     
@@ -361,8 +361,8 @@ for n=1:size(stafflineMatrix,1)
             thisBB = filteredSt(i).BoundingBox;
             thisCT = centroids2(j, :);
             % if statement to see if centroid is inside the boundingbox
-            if (thisCT(1) > thisBB(1) && thisCT(1) < thisBB(1) + thisBB(3) ...
-                    && thisCT(2) > thisBB(2) && thisCT(2) < thisBB(2) + thisBB(4))
+            if (thisCT(1) >= thisBB(1) && thisCT(1) <= thisBB(1) + thisBB(3) ...
+                    && thisCT(2) >= thisBB(2) && thisCT(2) <= thisBB(2) + thisBB(4))
                 filteredSt(i).notePos = [filteredSt(i).notePos;thisCT];
             end
         end
@@ -380,7 +380,9 @@ for n=1:size(stafflineMatrix,1)
         h = thisBB(4);
         
         noNotesInBB = size(filteredSt(boundInd).notePos,1);
-
+        if noNotesInBB ==
+            
+        
         firstNoteHeight = y+h-filteredSt(boundInd).notePos(1,2);
         inUpper = false;
         

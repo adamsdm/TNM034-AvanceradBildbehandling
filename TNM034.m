@@ -283,6 +283,7 @@ notes = ['F4'; 'E4'; 'D4'; 'C4'; 'B3'; 'A3'; 'G3'; 'F3'; 'E3'; 'D3'; 'C3'; 'B2';
 notes = cellstr(notes);
 noteSheet='';
 
+
 % for each system
 for n=1:size(stafflineMatrix,1)
     barWidth = diff(stafflineMatrix(n,:),1,2);   % calculate difference in rows
@@ -379,7 +380,12 @@ for n=1:size(stafflineMatrix,1)
         h = thisBB(4);
         
         noNotesInBB = size(filteredSt(boundInd).notePos,1);
-
+        
+        % If there's still trash bounding boxes
+        if noNotesInBB == 0
+            break
+        end
+        
         firstNoteHeight = y+h-filteredSt(boundInd).notePos(1,2);
         inUpper = false;
         
