@@ -7,16 +7,113 @@ function [ noteSheet ] = TNM034( Im )
 % PREPROCESSING
 Im = im2double( Im ); % Convert image to double
 
-level = graythresh(Im); % Computes the global threshold level from the image
-BW = im2bw(Im,level);   % Convert the image to binary image with threshold: level
+%% Masking
+[ySize, xSize] = size(Im);
+xSize = xSize/3;
+dChannel = 0.2;
+ImGrayTest = rgb2gray(Im);
 
+%%
+
+% Mask the area of the notesheet
+for i = 1:xSize -1
+    for j = 1:ySize -1
+        if(abs(Im(j, i, 1) - Im(j, i, 2)) < dChannel && abs(Im(j, i, 1) - Im(j, i, 3)) < dChannel)
+            ImGrayTest(j, i) = 0;
+        end
+    end
+end
+
+%%
+resMask = ImGrayTest > 0;
+se = strel('line',11,90);
+resMask = imerode(resMask, se);
+resMask = imdilate(resMask, se);
+
+points = detectHarrisFeatures(resMask);
+points = points.Location; %Extract the coordinates
+
+% Find corner points by finding the points closest to the corners of the
+% whole image
+
+resMaskInv = abs(resMask-1);
+resMaskPAD = padarray(resMaskInv,[20 20]);
+
+se1 = strel('disk',3);
+
+resMaskPAD = imopen(resMaskPAD, se1);
+resMaskPAD = imclose(resMaskPAD, se1);
+
+[y,x] = size(resMaskPAD);
+
+
+C = corner(resMaskPAD,'Harris');
+
+%%
+for p=1:length(C)
+    thisX = C(p,1);
+    thisY = C(p,2);
+    
+    
+    C(p,3)=pdist([0, 0; thisX, thisY], 'euclidean');       %top left
+    C(p,4)=pdist([x, 0; thisX, thisY], 'euclidean');       %top right
+    C(p,5)=pdist([0, y; thisX, thisY], 'euclidean');       %bottom left
+    C(p,6)=pdist([x, y; thisX, thisY], 'euclidean');       %bottom right
+end
+
+[~, ITL] = min(C(:,3)) ;
+[~, ITR] = min(C(:,4)) ;
+[~, IBL] = min(C(:,5)) ;
+[~, IBR] = min(C(:,6)) ;
+
+topLeft = C(ITL, 1:2);
+topRigt = C(ITR, 1:2);
+botLeft = C(IBL, 1:2);
+botRigt = C(IBR, 1:2);
+
+%%
+
+%imshow(resMaskPAD);
+ImPAD = padarray(Im,[20 20]); 
+
+
+%%
+
+
+xMin = topLeft(1);
+xMax = botRigt(1);
+yMin = topLeft(2);
+yMax = botRigt(2);
+
+movingPoints=[topLeft; topRigt; botRigt; botLeft]; %(x,y) coordinate
+fixedPoints= [xMin yMin; xMax yMin; xMax yMax; xMin yMax];
+
+
+Tform = fitgeotrans(movingPoints,fixedPoints,'projective');
+R=imref2d(size(ImPAD),[1 size(ImPAD,2)],[1 size(ImPAD,1)]);
+imgTransformed=imwarp(ImPAD,R,Tform,'OutputView',R);
+
+
+
+
+Im = imgTransformed(yMin:yMax,xMin:xMax,:);
+
+
+%% Normalize image background (dynamically) by dividing with local maximum
+ImGrayDouble = rgb2gray(Im);
+func = @(block_struct) (block_struct.data./max(max(block_struct.data)));
+Im2 = blockproc(ImGrayDouble, [9 9], func);
+
+%% Dynamic thresholding
+
+BW = adaptivethreshold(Im2,11,0.05);
 
 
 %% Find staff lines
 % HISTOGRAM
 % Find best angle
 
-invBW = BW<level;   
+invBW = abs(BW-1);   
 
 A = findBestRotAngle(Im);
 %% Show peaks in plot
@@ -59,9 +156,13 @@ peaks(indToRemove) = [];
 %% Remove trash peaks from locs and peaks
 
 index=1;
-while( index < length(locs-5)) 
+while( index < length(locs-5))
+    remainingPeaks = length(locs-5)-index;
+    if remainingPeaks < 5
+        locs(index:length(locs)) = -1;
+        break;
     % Check if 5 next elements are withing range
-    if( locs(index+1) - locs(index+0) < medianBarWidth && locs(index+2) - locs(index+1) < medianBarWidth && locs(index+3) - locs(index+2) < medianBarWidth &&  locs(index+4) - locs(index+3) < medianBarWidth ) 
+    elseif( locs(index+1) - locs(index+0) < medianBarWidth && locs(index+2) - locs(index+1) < medianBarWidth && locs(index+3) - locs(index+2) < medianBarWidth &&  locs(index+4) - locs(index+3) < medianBarWidth ) 
         locs(index:index+4);
         index=index+5;    % check next 5 peaks
     else % peak is trash peak
@@ -188,15 +289,20 @@ for n=1:size(stafflineMatrix,1)
     barWidth = mean(mean(barWidth));
     top = stafflineMatrix(n,1)-4*barWidth;      % Get top y-value of system
     bot = stafflineMatrix(n,5)+4*barWidth;      % Get top y-value of system
-
-
+    
+    MIN = min([size(CThresh,1) size(invBWRotatedNoStaff,1)]);
+    
+    top = stafflineMatrix(n,1)-4*barWidth;      % Get top y-value of system
+    bot = stafflineMatrix(n,5)+4*barWidth;      % Get top y-value of system
+    
+    top=clamp(top,0, MIN);          % Make sure top and bot is in range
+    bot=clamp(bot,0, MIN);
+    
+    
     subIm = CThresh(top:bot, :);                % Select the subimage from
     subIm2 = invBWRotatedNoStaff(top:bot, :);          % Select the subimage from
 
     subImNoTransform = BWRotatedNoStaff(top:bot, :);
-
-    subIm = CThresh(top:bot, :);                % Select the subimage from 
-    subIm2 = invBWRotatedNoStaff(top:bot, :);                % Select the subimage from
 
     %% Find boundingboxes in subIm2
     st = regionprops(subIm2,'BoundingBox');
@@ -244,7 +350,7 @@ for n=1:size(stafflineMatrix,1)
     centroids2(:,1) = x;
     centroids2(:,2) = y;
 
-
+%%
     sortedCentroids = sortrows(centroids2, 1);  % Sort centroids by x
     
     % Add info about notes in each boundingbox
@@ -254,8 +360,8 @@ for n=1:size(stafflineMatrix,1)
             thisBB = filteredSt(i).BoundingBox;
             thisCT = centroids2(j, :);
             % if statement to see if centroid is inside the boundingbox
-            if (thisCT(1) > thisBB(1) && thisCT(1) < thisBB(1) + thisBB(3) ...
-                    && thisCT(2) > thisBB(2) && thisCT(2) < thisBB(2) + thisBB(4))
+            if (thisCT(1) >= thisBB(1) && thisCT(1) <= thisBB(1) + thisBB(3) ...
+                    && thisCT(2) >= thisBB(2) && thisCT(2) <= thisBB(2) + thisBB(4))
                 filteredSt(i).notePos = [filteredSt(i).notePos;thisCT];
             end
         end
@@ -271,13 +377,13 @@ for n=1:size(stafflineMatrix,1)
         y = thisBB(2);
         w = thisBB(3);
         h = thisBB(4);
+        
         noNotesInBB = size(filteredSt(boundInd).notePos,1);
 
         firstNoteHeight = y+h-filteredSt(boundInd).notePos(1,2);
         inUpper = false;
         
-        y+h-filteredSt(boundInd).notePos(:,2);
-        
+        %%
         if firstNoteHeight >= h/2
             inUpper = true;
         end 

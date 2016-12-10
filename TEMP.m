@@ -40,7 +40,7 @@ end
 
 movingPoints=[20 40;200 30; 200 200; 1 236] %(x,y) coordinate
 
-%%
+
 fixedPoints=[1 1; 255 1;255 255;1 255];
 
 TFORM = fitgeotrans(movingPoints,fixedPoints,'projective');

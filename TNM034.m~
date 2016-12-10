@@ -1,15 +1,12 @@
+function [ noteSheet ] = TNM034( Im )
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% TNM034(Im) testing %%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 % PREPROCESSING
-clear all;
-close all;
-Im = imread('./Testbilder/im8c.jpg'); % Read the image
-Im = im2double(Im);
+Im = im2double( Im ); % Convert image to double
 
-imshow(Im)
 %% Masking
 [ySize, xSize] = size(Im);
 xSize = xSize/3;
@@ -51,8 +48,6 @@ resMaskPAD = imclose(resMaskPAD, se1);
 
 
 C = corner(resMaskPAD,'Harris');
-imshow(resMaskPAD); hold on;
-plot(C(:,1), C(:,2), '*');
 
 %%
 for p=1:length(C)
@@ -80,40 +75,29 @@ botRigt = C(IBR, 1:2);
 
 %imshow(resMaskPAD);
 ImPAD = padarray(Im,[20 20]); 
-imshow(resMaskPAD);
-hold on
-plot(topLeft(1),topLeft(2), 'r*');
-plot(topRigt(1),topRigt(2), 'r*');
-plot(botLeft(1),botLeft(2), 'r*');
-plot(botRigt(1),botRigt(2), 'r*');
 
 
 %%
-close all;
+
 
 xMin = topLeft(1);
 xMax = botRigt(1);
 yMin = topLeft(2);
 yMax = botRigt(2);
 
-movingPoints=[topLeft; topRigt; botRigt; botLeft] %(x,y) coordinate
+movingPoints=[topLeft; topRigt; botRigt; botLeft]; %(x,y) coordinate
 fixedPoints= [xMin yMin; xMax yMin; xMax yMax; xMin yMax];
 
 
 Tform = fitgeotrans(movingPoints,fixedPoints,'projective');
 R=imref2d(size(ImPAD),[1 size(ImPAD,2)],[1 size(ImPAD,1)]);
 imgTransformed=imwarp(ImPAD,R,Tform,'OutputView',R);
-imshow(imgTransformed,[]); hold on;
 
-plot(xMin,yMin, '*');
-plot(xMax,yMin, '*');
-plot(xMax,yMax, '*');
-plot(xMin,yMax, '*');
+
 
 
 Im = imgTransformed(yMin:yMax,xMin:xMax,:);
-figure;
-imshow(Im);
+
 
 %% Normalize image background (dynamically) by dividing with local maximum
 ImGrayDouble = rgb2gray(Im);
@@ -121,27 +105,21 @@ func = @(block_struct) (block_struct.data./max(max(block_struct.data)));
 Im2 = blockproc(ImGrayDouble, [9 9], func);
 
 %% Dynamic thresholding
-imshow(Im2);
-figure; 
-
 
 BW = adaptivethreshold(Im2,11,0.05);
-imshow(BW);
+
+
 %% Find staff lines
 % HISTOGRAM
 % Find best angle
 
-close all;
-invBW = abs(BW-1);   % 
+invBW = abs(BW-1);   
 
 A = findBestRotAngle(Im);
 %% Show peaks in plot
 invBWRotated = imrotate(invBW, A,'bilinear');   % Rotate the image with the angle obtained
 
 maxVals = sum(invBWRotated(:,:)');              % calculate the histogram by summing pixels horizontally
-plot(maxVals);
-xlabel('y-position');
-ylabel('Peak height');
 %%
 [peaks, locs] = findpeaks(maxVals);             % Find peak locations, stemlines y value = locs
 
@@ -150,9 +128,6 @@ maxVals(maxVals < maxValsThresh) = 0;           % Removes all noise below a cert
 
 [peaks, locs] = findpeaks(maxVals);             % Find peak locations, stemlines y value = locs
 
-plot(maxVals); hold on;
-scatter(locs,peaks,'r');
-xlabel('Staff line locations, Y-value');
 
 %% If two peaks are very close together, only keep the max of the two peaks
 
@@ -178,16 +153,17 @@ indToRemove = logical(indToRemove);
 locs(indToRemove) = [];
 peaks(indToRemove) = [];
 
-stem(locs,peaks);
-
-
 %% Remove trash peaks from locs and peaks
 
 index=1;
-while( index < length(locs-5)) 
+while( index < length(locs-5))
+    remainingPeaks = length(locs-5)-index;
+    if remainingPeaks < 5
+        locs(index:length(locs)) = -1;
+        break;
     % Check if 5 next elements are withing range
-    if( locs(index+1) - locs(index+0) < medianBarWidth && locs(index+2) - locs(index+1) < medianBarWidth && locs(index+3) - locs(index+2) < medianBarWidth &&  locs(index+4) - locs(index+3) < medianBarWidth ) 
-        locs(index:index+4)
+    elseif( locs(index+1) - locs(index+0) < medianBarWidth && locs(index+2) - locs(index+1) < medianBarWidth && locs(index+3) - locs(index+2) < medianBarWidth &&  locs(index+4) - locs(index+3) < medianBarWidth ) 
+        locs(index:index+4);
         index=index+5;    % check next 5 peaks
     else % peak is trash peak
         locs(index) = -1; % set peaks not accepted to negative value 
@@ -199,18 +175,9 @@ exclude = locs < 0; %Logicall array containing positions where locs is negative
 locs(exclude) = [];
 peaks(exclude) = [];
 
-stem(locs,peaks,'r');
-
-
-
 
 %% Show found peak locations in image;
 rotIm = imrotate(Im,A,'bilinear');
-imshow(rotIm); hold on;
-
-for i=1:length(locs)
-    line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
-end
 
 
 %% 
@@ -235,9 +202,6 @@ se(:,2)=1;
 
 BWRotatedNoStaff = imclose(BWRotated,se);
 
-imshow(BWRotated);
-figure;
-imshow(BWRotatedNoStaff);
 
 %% Corrolation and template matching
 
@@ -260,8 +224,6 @@ while length(gClefsCentroids) > size(stafflineMatrix,1)
     C = normxcorr2(gClefTempRez, BWRotatedNoStaff);
     CThresh = (C>threshValue*max(max(C)));
     gClefsCentroids= regionprops(CThresh, 'centroid');
-    %imshow(CThresh);
-    %pause(0.4);
 end
 
 
@@ -284,14 +246,12 @@ noteTemplate = im2bw(noteTemplate,0.9);
 % resize height of image to 130% of barwidth
 noteTempRez = imresize(noteTemplate, (1/0.72)*[barWidth NaN]);
 
-
-imshow(BWRotatedNoStaff)
 C = normxcorr2(noteTempRez, BWRotatedNoStaff);
 
 %%
 % Remove border from C which normxcorr2 adds
-yoffset = int16((size(C,1)-size(BWRotatedNoStaff,1))/2)
-xoffset = int16((size(C,2)-size(BWRotatedNoStaff,2))/2)
+yoffset = int16((size(C,1)-size(BWRotatedNoStaff,1))/2);
+xoffset = int16((size(C,2)-size(BWRotatedNoStaff,2))/2);
 
 
 
@@ -299,24 +259,11 @@ C = C(yoffset:size(C,1)-yoffset,:);
 C = C(:, xoffset:size(C,2)-xoffset);
 
 
-for i=1:length(locs)
-    line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
-end
 %%
-close all;
+
 CThresh = (C>0.78*max(max(C)));
 
 CThresh(:,1:gClefXMean) = 0;
-
-
-imshow(CThresh);
-for i=1:length(locs)
-    line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
-end
-figure;
-imshow(BWRotatedNoStaff);
-
-
 
 invBWRotatedNoStaff = BWRotatedNoStaff<1;
 
@@ -327,12 +274,7 @@ centroids = [s.Centroid];
 x = centroids(1:2:end-1);
 y = centroids(2:2:end);
 
-imshow(CThresh); hold on;
-for i=1:length(locs)
-    line([0,size(Im,2)],[locs(i),locs(i)],'LineWidth',1,'Color','red');
-end
 
-plot(x,y,['*', 'green']);
 
 
 %% 
@@ -345,19 +287,22 @@ noteSheet='';
 for n=1:size(stafflineMatrix,1)
     barWidth = diff(stafflineMatrix(n,:),1,2);   % calculate difference in rows
     barWidth = mean(mean(barWidth));
+    top = stafflineMatrix(n,1)-4*barWidth;      % Get top y-value of system
+    bot = stafflineMatrix(n,5)+4*barWidth;      % Get top y-value of system
     
+    MIN = min([size(CThresh,1) size(invBWRotatedNoStaff,1)]);
     
     top = stafflineMatrix(n,1)-4*barWidth;      % Get top y-value of system
     bot = stafflineMatrix(n,5)+4*barWidth;      % Get top y-value of system
-
+    
+    top=clamp(top,0, MIN);          % Make sure top and bot is in range
+    bot=clamp(bot,0, MIN);
+    
     
     subIm = CThresh(top:bot, :);                % Select the subimage from
     subIm2 = invBWRotatedNoStaff(top:bot, :);          % Select the subimage from
 
     subImNoTransform = BWRotatedNoStaff(top:bot, :);
-
-    subIm = CThresh(top:bot, :);                % Select the subimage from 
-    subIm2 = invBWRotatedNoStaff(top:bot, :);                % Select the subimage from
 
     %% Find boundingboxes in subIm2
     st = regionprops(subIm2,'BoundingBox');
@@ -404,8 +349,9 @@ for n=1:size(stafflineMatrix,1)
     centroids2 = zeros(length(x), 2);           % Merge the x,y vector into a single vector of pairs
     centroids2(:,1) = x;
     centroids2(:,2) = y;
-
-
+%% TEMP DELETE
+    imshow(subIm)
+%%
     sortedCentroids = sortrows(centroids2, 1);  % Sort centroids by x
     
     % Add info about notes in each boundingbox
@@ -424,14 +370,6 @@ for n=1:size(stafflineMatrix,1)
   
     halfBWidth = barWidth/2;
     subIm3 = invBWRotated(top:bot, :);                % Select the subimage from;
-    imshow(subIm3); hold on;
-    plot(x,y,'*');
-    
-    for u = 1:11
-        line([0,size(Im,2)],[u*2*halfBWidth,u*2*halfBWidth],'LineWidth',1,'Color','red');
-    end
-    
-    line([0,size(Im,2)],[size(subIm3,1)/2,size(subIm3,1)/2],'LineWidth',2,'Color','blue');
     
     %% for each boundingbox
     for boundInd = 1:length(filteredSt)
@@ -440,18 +378,13 @@ for n=1:size(stafflineMatrix,1)
         y = thisBB(2);
         w = thisBB(3);
         h = thisBB(4);
+        
         noNotesInBB = size(filteredSt(boundInd).notePos,1);
-        
-        
-        imshow(subIm3); hold on;
-        rectangle('Position', [x,y,w,h],...
-                'EdgeColor','r','LineWidth',2  );
-        
+
         firstNoteHeight = y+h-filteredSt(boundInd).notePos(1,2);
         inUpper = false;
         
-        y+h-filteredSt(boundInd).notePos(:,2);
-        
+        %%
         if firstNoteHeight >= h/2
             inUpper = true;
         end 
@@ -470,7 +403,7 @@ for n=1:size(stafflineMatrix,1)
             
             noBars = round(dy/(halfBWidth) );            
             
-            currNotePitch = notes(12-round(noBars))
+            currNotePitch = notes(12-round(noBars));
 
             %%
             if noNotesInBB == 1
@@ -502,7 +435,7 @@ for n=1:size(stafflineMatrix,1)
                     if noteInd == 1
                         leftBound = thisX-0.5*barWidth;
                         rightBound = thisX+0.5*barWidth;
-                                            
+                                            %
                     elseif noteInd == noNotesInBB           % All notes in middle
                         leftBound = thisX-1.5*barWidth;
                         rightBound = thisX-0.5*barWidth;
@@ -534,33 +467,21 @@ for n=1:size(stafflineMatrix,1)
                 currNotePitch = noteClassificate3(currNotePitch, subNoteIm);
             end
             
-            %DEBUG
-            %currNotePitch
-            %figure;
-            %imshow(subNoteIm);
-            
             noteSheet=[noteSheet, currNotePitch];      
 
 
        end
            
     end 
-    if(n < size(stafflineMatrix, 1))
+    if n < size(stafflineMatrix, 1)
         noteSheet=[noteSheet, 'n'];
     end
 end % for-system
-  
-%%
-im1sfacit  = 'g3e3f3e3g2e3f3a2b2C3c3g3e3f3e3g2e3nf3a2b2C3c3e2g2g2f2a2A2d3d3g2e3c3nf3d3g3a2b2C3c3C3c3';
-im3sfacit  = 'G3g3a3G3E3e3f3E3D3d3e3d3b2c3d3e3f3G3nG3g3a3G3D3g3a3B3C4E3F3G3nc3c3c3d3e3d3c3d3E3C3d3d3d3e3f3e3d3e3F3D3ne3f3G3f3e3f3g3A3g3f3g3a3B3a3g3C4C4';
-im5sfacit  = 'd3b2d3g3d3b2d3b2g2f2a2d2f2a2c3e3c3a2f2d2f2g2d2g2b2d3b2g3d3b2d3b2g2nf2a2d2f2a2c3e3c3a2f2d2f2G2a2d3f3c3e3a2c3e3c3d3f3a2d3f3d3ne3g3e3c3a2c3d3f3a3g3b3a3c3e3a2c3e3c3d3f3a2d3f3d3e3g3b3g3e3c3D3';
-im6sfacit  = 'G2g2G2G2F2G2F2G2nG2g2G2G2F2G2nG2g2G2G2F2G2F2A2nG2g2G2G2F2G2nD2C3b2a2B2C3nA2G2F2F2nD2C3b2a2B2C3nA2G2F2G2F2A2';
-im8sfacit  = 'C2F2A2F2b2a2g2f2E2G2E2nC2F2A2F2b2a2g2f2E2G2C2E2nA2a2a2A2A2B2a2a2G2g2g2G2f2f2E2F2nA2a2a2A2A2B2A2G2G2F2E2';
-im9sfacit  = 'b2d3G3C4D3e3c3b2d3b3c4C4A3F3D3na3b3C4C4C4a3g3B3B3C4E3F3G3E3b2d3nG3C4D3e3c3b2d3a3c4C4A3F3D3';
-im10sfacit = 'D3B3d3e3G3f3a3C4f3g3B3a3G3e3f3D3e3c3nC3f3D3f3g3C4g3f3E3g3c4C4a3g3nF3e3d3E3d3c3D3c3b2C3a2c3F3d3C3e3f3F3E3nC3A3c3e3G3f3a3C4f3g3A3b3G3e3f3D3e3c3nC3A3c3e3G3f3a3C4f3g3A3a3G3e3f3D3e3c3nf3g3f3E3g3b3C4a3g3F3e3d3E3d3c3nD3c3b2C3a2c3F3d3C3F3E3';
-
 
 noteSheet = strjoin(noteSheet);
 noteSheet(ismember(noteSheet,' ,.:;!')) = [];
 
-lsteindist = strdist(noteSheet, im8sfacit)
+end
+
+
+

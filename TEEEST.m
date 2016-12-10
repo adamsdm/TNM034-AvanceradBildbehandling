@@ -1,9 +1,3 @@
-Im = imread('./Testbilder/im10s.jpg'); % Read the image
-%imshow(Im);
-notes = TNM034(Im);
-
-
-%{
 im1sfacit  = 'g3e3f3e3g2e3f3a2b2C3c3g3e3f3e3g2e3nf3a2b2C3c3e2g2g2f2a2A2d3d3g2e3c3nf3d3g3a2b2C3c3C3c3';
 im3sfacit  = 'G3g3a3G3E3e3f3E3D3d3e3d3b2c3d3e3f3G3nG3g3a3G3D3g3a3B3C4E3F3G3nc3c3c3d3e3d3c3d3E3C3d3d3d3e3f3e3d3e3F3D3ne3f3G3f3e3f3g3A3g3f3g3a3B3a3g3C4C4';
 im5sfacit  = 'd3b2d3g3d3b2d3b2g2f2a2d2f2a2c3e3c3a2f2d2f2g2d2g2b2d3b2g3d3b2d3b2g2nf2a2d2f2a2c3e3c3a2f2d2f2G2a2d3f3c3e3a2c3e3c3d3f3a2d3f3d3ne3g3e3c3a2c3d3f3a3g3b3a3c3e3a2c3e3c3d3f3a2d3f3d3e3g3b3g3e3c3D3';
@@ -12,9 +6,14 @@ im8sfacit  = 'C2F2A2F2b2a2g2f2E2G2E2nC2F2A2F2b2a2g2f2E2G2C2E2nA2a2a2A2A2B2a2a2G2
 im9sfacit  = 'b2d3G3C4D3e3c3b2d3b3c4C4A3F3D3na3b3C4C4C4a3g3B3B3C4E3F3G3E3b2d3nG3C4D3e3c3b2d3a3c4C4A3F3D3';
 im10sfacit = 'D3B3d3e3G3f3a3C4f3g3B3a3G3e3f3D3e3c3nC3f3D3f3g3C4g3f3E3g3c4C4a3g3nF3e3d3E3d3c3D3c3b2C3a2c3F3d3C3e3f3F3E3nC3A3c3e3G3f3a3C4f3g3A3b3G3e3f3D3e3c3nC3A3c3e3G3f3a3C4f3g3A3a3G3e3f3D3e3c3nf3g3f3E3g3b3C4a3g3F3e3d3E3d3c3nD3c3b2C3a2c3F3d3C3F3E3';
 
-lsteindist = strdist(notes, im10sfacit)
-%}
 
-%% 
-I = imread('cameraman.tif');
-Igpu = gpuArray(I); 
+%%
+Im = imread('./Testbilder/im1c.jpg'); % Read the image
+
+
+%%
+%imshow(Im);
+notes = TNM034(Im);
+
+lsteindist = strdist(notes, im3sfacit)
+

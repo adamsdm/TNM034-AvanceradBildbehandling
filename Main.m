@@ -6,9 +6,10 @@
 % PREPROCESSING
 clear all;
 close all;
-Im = imread('./Testbilder/im3c.jpg'); % Read the image
+Im = imread('./Testbilder/im13c.jpg'); % Read the image
 Im = im2double(Im);
 
+imshow(Im)
 %% Masking
 [ySize, xSize] = size(Im);
 xSize = xSize/3;
@@ -79,7 +80,7 @@ botRigt = C(IBR, 1:2);
 
 %imshow(resMaskPAD);
 ImPAD = padarray(Im,[20 20]); 
-imshow(ImPAD);
+imshow(resMaskPAD);
 hold on
 plot(topLeft(1),topLeft(2), 'r*');
 plot(topRigt(1),topRigt(2), 'r*');
@@ -119,20 +120,19 @@ ImGrayDouble = rgb2gray(Im);
 func = @(block_struct) (block_struct.data./max(max(block_struct.data)));
 Im2 = blockproc(ImGrayDouble, [9 9], func);
 
-level = graythresh(Im2); % Computes the global threshold level from the image
-BW = im2bw(Im2,level);   % Convert the image to binary image with threshold: level
-
+%% Dynamic thresholding
 imshow(Im2);
-figure;
+figure; 
+
+
+BW = adaptivethreshold(Im2,11,0.05);
 imshow(BW);
-
-
 %% Find staff lines
 % HISTOGRAM
 % Find best angle
 
 close all;
-invBW = BW<level;   % 
+invBW = abs(BW-1);   % 
 
 A = findBestRotAngle(Im);
 %% Show peaks in plot
@@ -181,12 +181,17 @@ peaks(indToRemove) = [];
 stem(locs,peaks);
 
 
-%% Remove trash peaks from locs and peaks
+%% Remove peaks that aren't groups of five 
 
 index=1;
 while( index < length(locs-5)) 
+    %%
+    remainingPeaks = length(locs-5)-index;
+    if remainingPeaks < 5
+        locs(index:length(locs)) = -1;
+        return;
     % Check if 5 next elements are withing range
-    if( locs(index+1) - locs(index+0) < medianBarWidth && locs(index+2) - locs(index+1) < medianBarWidth && locs(index+3) - locs(index+2) < medianBarWidth &&  locs(index+4) - locs(index+3) < medianBarWidth ) 
+    elseif( locs(index+1) - locs(index+0) < medianBarWidth && locs(index+2) - locs(index+1) < medianBarWidth && locs(index+3) - locs(index+2) < medianBarWidth &&  locs(index+4) - locs(index+3) < medianBarWidth ) 
         locs(index:index+4)
         index=index+5;    % check next 5 peaks
     else % peak is trash peak
@@ -308,7 +313,6 @@ CThresh = (C>0.78*max(max(C)));
 
 CThresh(:,1:gClefXMean) = 0;
 
-temp = 
 
 imshow(CThresh);
 for i=1:length(locs)
@@ -346,13 +350,17 @@ noteSheet='';
 for n=1:size(stafflineMatrix,1)
     barWidth = diff(stafflineMatrix(n,:),1,2);   % calculate difference in rows
     barWidth = mean(mean(barWidth));
+    
+    MAX = max([size(CThresh,1) size(stafflineMatrix,1)])
+    
     top = stafflineMatrix(n,1)-4*barWidth;      % Get top y-value of system
     bot = stafflineMatrix(n,5)+4*barWidth;      % Get top y-value of system
-
-
-    subIm = CThresh(top:bot, :);                % Select the subimage from
-    subIm2 = invBWRotatedNoStaff(top:bot, :);          % Select the subimage from
-
+    
+    top=clamp(top,0, size(CThresh,1));
+    bot=clamp(bot,0, size(CThresh,1));
+    
+    
+    %%
     subImNoTransform = BWRotatedNoStaff(top:bot, :);
 
     subIm = CThresh(top:bot, :);                % Select the subimage from 
@@ -544,10 +552,22 @@ for n=1:size(stafflineMatrix,1)
        end
            
     end 
-    if(n < size(staffLineMatrix, 1))
+    if(n < size(stafflineMatrix, 1))
         noteSheet=[noteSheet, 'n'];
     end
 end % for-system
-    
-noteSheet
+  
+%%
+im1sfacit  = 'g3e3f3e3g2e3f3a2b2C3c3g3e3f3e3g2e3nf3a2b2C3c3e2g2g2f2a2A2d3d3g2e3c3nf3d3g3a2b2C3c3C3c3';
+im3sfacit  = 'G3g3a3G3E3e3f3E3D3d3e3d3b2c3d3e3f3G3nG3g3a3G3D3g3a3B3C4E3F3G3nc3c3c3d3e3d3c3d3E3C3d3d3d3e3f3e3d3e3F3D3ne3f3G3f3e3f3g3A3g3f3g3a3B3a3g3C4C4';
+im5sfacit  = 'd3b2d3g3d3b2d3b2g2f2a2d2f2a2c3e3c3a2f2d2f2g2d2g2b2d3b2g3d3b2d3b2g2nf2a2d2f2a2c3e3c3a2f2d2f2G2a2d3f3c3e3a2c3e3c3d3f3a2d3f3d3ne3g3e3c3a2c3d3f3a3g3b3a3c3e3a2c3e3c3d3f3a2d3f3d3e3g3b3g3e3c3D3';
+im6sfacit  = 'G2g2G2G2F2G2F2G2nG2g2G2G2F2G2nG2g2G2G2F2G2F2A2nG2g2G2G2F2G2nD2C3b2a2B2C3nA2G2F2F2nD2C3b2a2B2C3nA2G2F2G2F2A2';
+im8sfacit  = 'C2F2A2F2b2a2g2f2E2G2E2nC2F2A2F2b2a2g2f2E2G2C2E2nA2a2a2A2A2B2a2a2G2g2g2G2f2f2E2F2nA2a2a2A2A2B2A2G2G2F2E2';
+im9sfacit  = 'b2d3G3C4D3e3c3b2d3b3c4C4A3F3D3na3b3C4C4C4a3g3B3B3C4E3F3G3E3b2d3nG3C4D3e3c3b2d3a3c4C4A3F3D3';
+im10sfacit = 'D3B3d3e3G3f3a3C4f3g3B3a3G3e3f3D3e3c3nC3f3D3f3g3C4g3f3E3g3c4C4a3g3nF3e3d3E3d3c3D3c3b2C3a2c3F3d3C3e3f3F3E3nC3A3c3e3G3f3a3C4f3g3A3b3G3e3f3D3e3c3nC3A3c3e3G3f3a3C4f3g3A3a3G3e3f3D3e3c3nf3g3f3E3g3b3C4a3g3F3e3d3E3d3c3nD3c3b2C3a2c3F3d3C3F3E3';
 
+
+noteSheet = strjoin(noteSheet);
+noteSheet(ismember(noteSheet,' ,.:;!')) = [];
+
+lsteindist = strdist(noteSheet, im8sfacit)
